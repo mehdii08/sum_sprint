@@ -1,0 +1,32 @@
+[
+  {
+    "id": "easy_add",
+    "name": "Easy Addition",
+    "description": "Numbers 1-10, 5 seconds per question.",
+    "operation": "+",
+    "minNumber": 1,
+    "maxNumber": 10,
+    "timePerQuestionSeconds": 5,
+    "questionCount": 10
+  },
+  {
+    "id": "medium_add",
+    "name": "Medium Addition",
+    "description": "Numbers 5-20, 4 seconds per question.",
+    "operation": "+",
+    "minNumber": 5,
+    "maxNumber": 20,
+    "timePerQuestionSeconds": 4,
+    "questionCount": 10
+  },
+  {
+    "id": "hard_mix",
+    "name": "Hard Mix",
+    "description": "Numbers 10-50, 3 seconds per question.",
+    "operation": "+",
+    "minNumber": 10,
+    "maxNumber": 50,
+    "timePerQuestionSeconds": 3,
+    "questionCount": 10
+  }
+]
