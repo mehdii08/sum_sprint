@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/challenge_definition.dart';
@@ -12,8 +13,11 @@ import 'result_screen.dart';
 
 class GameScreen extends StatefulWidget {
   final ChallengeDefinition challenge;
+  /// If non-null, the game is played in competition mode and results
+  /// should be submitted to Supabase for this competition.
+  final String? competitionId;
 
-  const GameScreen({super.key, required this.challenge});
+  const GameScreen({super.key, required this.challenge, this.competitionId});
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -52,8 +56,9 @@ class _GameScreenState extends State<GameScreen>
       TweenSequenceItem(tween: Tween(begin: 10, end: 0), weight: 1),
     ]).animate(_wrongAnimController);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ChallengeProvider>().startChallenge(widget.challenge);
+    final cp = context.read<ChallengeProvider>();
+    Timer.run(() {
+      cp.startChallenge(widget.challenge);
     });
   }
 
@@ -95,15 +100,13 @@ class _GameScreenState extends State<GameScreen>
         ),
         body: Consumer<ChallengeProvider>(
           builder: (context, provider, _) {
-            // Check for game finished
-            if (provider.gameState == GameState.finished && !_navigated) {
-              _navigated = true;
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                _navigateToResult(provider);
-              });
-              return const Center(child: CircularProgressIndicator());
-            }
+            // Check for game finished — navigate via addPostFrameCallback
+            // so the current frame completes before we replace the screen.
             if (provider.gameState == GameState.finished) {
+              if (!_navigated) {
+                _navigated = true;
+                Timer.run(() => _navigateToResult(provider));
+              }
               return const Center(child: CircularProgressIndicator());
             }
 
@@ -358,26 +361,35 @@ class _GameScreenState extends State<GameScreen>
   bool _navigated = false;
 
   void _navigateToResult(ChallengeProvider provider) {
-    if (_navigated) {
-      // Safety check: already navigating
-      return;
-    }
-
+    debugPrint('[GameScreen] _navigateToResult — competitionId=${widget.competitionId}');
     final playerProvider = context.read<PlayerProvider>();
     final result = provider.finalizeResult(playerProvider.playerData);
+    debugPrint('[GameScreen] _navigateToResult — score=${result.score} correct=${result.correctCount}');
 
     context.read<ResultProvider>().saveResult(result);
 
-    // Use pushReplacement after microtask to avoid build-during-build
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ResultScreen(
-          result: result,
-          challenge: widget.challenge,
+    if (!mounted) return;
+
+    if (widget.competitionId != null) {
+      // Competition mode: pop with result data so the parent detail screen
+      // can push ResultScreen and reload state at the right time.
+      Navigator.pop(context, {
+        'result': result,
+        'challenge': widget.challenge,
+        'competitionId': widget.competitionId,
+      });
+    } else {
+      // Offline warm-up mode: push ResultScreen directly (existing behaviour).
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ResultScreen(
+            result: result,
+            challenge: widget.challenge,
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 }
 

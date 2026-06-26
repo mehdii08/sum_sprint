@@ -1,36 +1,83 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="Sum Sprint - Fast math, real competitions">
 
-  <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="sum_sprint">
+  <meta name="apple-mobile-web-app-title" content="Sum Sprint">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
-  <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>sum_sprint</title>
+  <title>Sum Sprint</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Telegram Mini App SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- DOM bridge: writes Telegram data into a <script type="application/json">
+       element in the DOM. Flutter reads it via dart:html's document.getElementById().
+       The DOM is the only thing guaranteed to be shared between inline scripts
+       and Flutter's compiled JS inside an iframe. -->
+  <script>
+    (function () {
+      function writeTelegramData() {
+        var tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+
+        if (!tg) {
+          console.warn('[SumSprint] Telegram WebApp unavailable');
+          // Write a negative bridge so Flutter knows to skip auth.
+          var neg = document.createElement('script');
+          neg.id = 'telegram-bridge';
+          neg.type = 'application/json';
+          neg.textContent = JSON.stringify({ available: false });
+          document.body.appendChild(neg);
+          return;
+        }
+
+        tg.ready();
+
+        // Prevent Telegram's built-in vertical swipe gestures
+        // (pull-to-close / pull-to-refresh) from conflicting with
+        // Flutter's own scrollable widgets.
+        // https://stackoverflow.com/a/78756102 — CC BY-SA 4.0
+        tg.disableVerticalSwipes();
+
+        var user = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : {};
+
+        var payload = {
+          available: true,
+          initData: tg.initData || '',
+          user: {
+            id: user.id || null,
+            firstName: user.first_name || '',
+            lastName: user.last_name || '',
+            username: user.username || '',
+            photoUrl: user.photo_url || ''
+          }
+        };
+
+        var bridge = document.createElement('script');
+        bridge.id = 'telegram-bridge';
+        bridge.type = 'application/json';
+        bridge.textContent = JSON.stringify(payload);
+        document.body.appendChild(bridge);
+
+        console.log('[SumSprint] Telegram bridge written', payload);
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', writeTelegramData);
+      } else {
+        writeTelegramData();
+      }
+    })();
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

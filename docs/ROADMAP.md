@@ -20,25 +20,35 @@
 - Pure Dart services (no Flutter dependency in business logic)
 - Provider-based state management
 
-## v2.0 – Competitions & Online Play (Planned)
+## v2.0 – Competitions & Online Play (🔄 In Progress)
 
-### Features
-- **User accounts**: Login via email, Google, or Apple
-- **Live competitions**: Timed events with leaderboards
-- **Server leaderboard**: Global and per-challenge rankings
-- **ApiResultRepository**: Swaps local storage for REST API
-- **Points pool**: Community-driven reward system
-- **Push notifications**: Competition reminders, leaderboard updates
-- **More challenge types**: Subtraction, multiplication, division, pattern recognition
-- **Multi-language support**: Add French, Spanish, German, etc. via new .arb files
+### ✅ Implemented (v2-alpha)
+- **Supabase Auth**: Email/password sign-up and sign-in (`AuthProvider`)
+- **Competitions list**: Fetched from Supabase `public.competitions` table
+- **Competition detail**: Tabbed view (Challenges / Leaderboard)
+- **Join system**: Points-based entry via `join_competition` RPC
+- **Competition game mode**: Same `GameScreen`, results submitted to Supabase
+- **Leaderboard**: Real-time rankings from `public.participants`
+- **Points pool**: Users start with 500 points, competitions pool from entries
+- **SupabaseResultRepository**: Online result storage (runs alongside offline)
+- **SupabaseCompetitionRepository**: Competition-specific CRUD operations
+- **Offline mode preserved**: Warm Up uses `LocalResultRepository` unchanged
+
+### 🔜 Planned (v2-beta)
+- Competitions fetched from server API instead of hardcoded JSON (challenges.json still works offline)
+- Prize distribution on competition end
+- OTP and social login (Google, Apple)
+- Push notifications
+- More challenge types: Subtraction, multiplication, division
 
 ### Technical Changes
-| Component | v1 (Current) | v2 (Planned) |
+| Component | v1 (Current) | v2 (Current) |
 |-----------|-------------|-------------|
-| Auth | None | Firebase Auth / OAuth |
-| Data storage | SharedPreferences | Server API + local cache |
-| Repository | LocalResultRepository | ApiResultRepository |
-| Challenges | Bundled JSON | Server-fetched + bundled fallback |
+| Auth | None | Supabase Auth (email/password) |
+| Data storage | SharedPreferences | SharedPreferences + Supabase |
+| Repository | LocalResultRepository | LocalResultRepository + SupabaseCompetitionRepository |
+| Challenges | Bundled JSON | Bundled JSON (offline) + server JSON (competitions) |
+| Navigation | Simple push | Push routes (no auth guards yet) |
 | PlayerData.uid | Empty string | Server-assigned user ID |
 | Navigation | Simple push | GoRouter with auth guards |
 

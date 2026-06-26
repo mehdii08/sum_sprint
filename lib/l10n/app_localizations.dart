@@ -1,71 +1,17 @@
-import 'dart:async';
-
-import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:intl/intl.dart' as intl;
 
-import 'app_localizations_en.dart';
+/// Hand-written localization class for Sum Sprint.
+///
+/// All user-facing strings are defined here. Currently only English is provided.
+/// To add a new language: add a new map in [localizedStrings] and a new entry
+/// in [supportedLocales]. No code generation step required.
+class AppLocalizations {
+  final Locale locale;
 
-// ignore_for_file: type=lint
+  AppLocalizations(this.locale);
 
-/// Callers can lookup localized strings with an instance of AppLocalizations
-/// returned by `AppLocalizations.of(context)`.
-///
-/// Applications need to include `AppLocalizations.delegate()` in their app's
-/// `localizationDelegates` list, and the locales they support in the app's
-/// `supportedLocales` list. For example:
-///
-/// ```dart
-/// import 'l10n/app_localizations.dart';
-///
-/// return MaterialApp(
-///   localizationsDelegates: AppLocalizations.localizationsDelegates,
-///   supportedLocales: AppLocalizations.supportedLocales,
-///   home: MyApplicationHome(),
-/// );
-/// ```
-///
-/// ## Update pubspec.yaml
-///
-/// Please make sure to update your pubspec.yaml to include the following
-/// packages:
-///
-/// ```yaml
-/// dependencies:
-///   # Internationalization support.
-///   flutter_localizations:
-///     sdk: flutter
-///   intl: any # Use the pinned version from flutter_localizations
-///
-///   # Rest of dependencies
-/// ```
-///
-/// ## iOS Applications
-///
-/// iOS applications define key application metadata, including supported
-/// locales, in an Info.plist file that is built into the application bundle.
-/// To configure the locales supported by your app, you’ll need to edit this
-/// file.
-///
-/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
-/// Then, in the Project Navigator, open the Info.plist file under the Runner
-/// project’s Runner folder.
-///
-/// Next, select the Information Property List item, select Add Item from the
-/// Editor menu, then select Localizations from the pop-up menu.
-///
-/// Select and expand the newly-created Localizations item then, for each
-/// locale your application supports, add a new item and select the locale
-/// you wish to add from the pop-up menu in the Value field. This list should
-/// be consistent with the languages listed in the AppLocalizations.supportedLocales
-/// property.
-abstract class AppLocalizations {
-  AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
-
-  final String localeName;
-
+  /// Get the localized instance from the widget tree.
   static AppLocalizations of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
@@ -73,344 +19,142 @@ abstract class AppLocalizations {
   static const LocalizationsDelegate<AppLocalizations> delegate =
       _AppLocalizationsDelegate();
 
-  /// A list of this localizations delegate along with the default localizations
-  /// delegates.
-  ///
-  /// Returns a list of localizations delegates containing this delegate along with
-  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
-  /// and GlobalWidgetsLocalizations.delegate.
-  ///
-  /// Additional delegates can be added by appending to this list in
-  /// MaterialApp. This list does not have to be used at all if a custom list
-  /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = [
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
-  /// A list of this localizations delegate's supported locales.
-  static const List<Locale> supportedLocales = <Locale>[Locale('en')];
+  static const List<Locale> supportedLocales = [Locale('en')];
 
-  /// No description provided for @appTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Sum Sprint'**
-  String get appTitle;
+  // ── translations ──
 
-  /// No description provided for @appTagline.
-  ///
-  /// In en, this message translates to:
-  /// **'Sharpen your mind, beat the clock!'**
-  String get appTagline;
+  Map<String, String> _t(String lang) {
+    return switch (lang) {
+      // Future: add more languages by adding a new case here
+      _ => _english,
+    };
+  }
 
-  /// No description provided for @nicknameHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter your nickname'**
-  String get nicknameHint;
+  String _get(String key) => _t(locale.languageCode)[key] ?? key;
 
-  /// No description provided for @warmUp.
-  ///
-  /// In en, this message translates to:
-  /// **'Warm Up'**
-  String get warmUp;
+  static const Map<String, String> _english = {
+    'appTitle': 'Sum Sprint',
+    'appTagline': 'Sharpen your mind, beat the clock!',
+    'nicknameHint': 'Enter your nickname',
+    'warmUp': 'Warm Up',
+    'competitions': 'Competitions',
+    'comingSoon': 'Coming Soon',
+    'comingSoonMessage': 'Competition mode will be available in a future update!',
+    'ok': 'OK',
+    'cancel': 'Cancel',
+    'warmUpChallenges': 'Warm Up Challenges',
+    'noChallenges': 'No challenges available.',
+    'retry': 'Retry',
+    'best': 'Best',
+    'bestScoreNone': 'No attempts yet',
+    'play': 'Play',
+    'history': 'History',
+    'historyTitle': '{name} - History',
+    'clearHistory': 'Clear History',
+    'clearHistoryConfirm': 'Are you sure you want to clear all history for this challenge? This cannot be undone.',
+    'clear': 'Clear',
+    'noGamesPlayed': 'No games played yet',
+    'noGamesPlayedHint': 'Complete a challenge to see your history!',
+    'justNow': 'Just now',
+    'minAgo': '{n}m ago',
+    'hourAgo': '{n}h ago',
+    'dayAgo': '{n}d ago',
+    'dateFormat': '{day}/{month}/{year}',
+    'correctOutOf': '{correct}/10 correct',
+    'avg': 'avg',
+    'getReady': 'Get ready...',
+    'timeUp': "Time's Up!",
+    'correct': 'Correct!',
+    'wrong': 'Wrong!',
+    'answerWas': 'Answer: {answer}',
+    'quitGame': 'Quit Game?',
+    'quitGameConfirm': 'Are you sure you want to quit? Your progress will be lost.',
+    'keepPlaying': 'Keep Playing',
+    'quit': 'Quit',
+    'challengeComplete': 'Challenge Complete!',
+    'finalScore': 'Final Score',
+    'points': 'points',
+    'coins': 'coins',
+    'correctStat': 'Correct',
+    'avgTimeStat': 'Avg Time (s)',
+    'totalTimeStat': 'Total Time',
+    'newHighScore': 'New High Score!',
+    'playAgain': 'Play Again',
+    'home': 'Home',
+  };
 
-  /// No description provided for @competitions.
-  ///
-  /// In en, this message translates to:
-  /// **'Competitions'**
-  String get competitions;
+  // ── getters and parameterized methods ──
 
-  /// No description provided for @comingSoon.
-  ///
-  /// In en, this message translates to:
-  /// **'Coming Soon'**
-  String get comingSoon;
-
-  /// No description provided for @comingSoonMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Competition mode will be available in a future update!'**
-  String get comingSoonMessage;
-
-  /// No description provided for @ok.
-  ///
-  /// In en, this message translates to:
-  /// **'OK'**
-  String get ok;
-
-  /// No description provided for @cancel.
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel'**
-  String get cancel;
-
-  /// No description provided for @warmUpChallenges.
-  ///
-  /// In en, this message translates to:
-  /// **'Warm Up Challenges'**
-  String get warmUpChallenges;
-
-  /// No description provided for @noChallenges.
-  ///
-  /// In en, this message translates to:
-  /// **'No challenges available.'**
-  String get noChallenges;
-
-  /// No description provided for @retry.
-  ///
-  /// In en, this message translates to:
-  /// **'Retry'**
-  String get retry;
-
-  /// No description provided for @best.
-  ///
-  /// In en, this message translates to:
-  /// **'Best'**
-  String get best;
-
-  /// No description provided for @bestScore.
-  ///
-  /// In en, this message translates to:
-  /// **'{score} pts'**
-  String bestScore(Object score);
-
-  /// No description provided for @bestScoreNone.
-  ///
-  /// In en, this message translates to:
-  /// **'No attempts yet'**
-  String get bestScoreNone;
-
-  /// No description provided for @play.
-  ///
-  /// In en, this message translates to:
-  /// **'Play'**
-  String get play;
-
-  /// No description provided for @history.
-  ///
-  /// In en, this message translates to:
-  /// **'History'**
-  String get history;
-
-  /// No description provided for @historyTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'{name} - History'**
-  String historyTitle(Object name);
-
-  /// No description provided for @clearHistory.
-  ///
-  /// In en, this message translates to:
-  /// **'Clear History'**
-  String get clearHistory;
-
-  /// No description provided for @clearHistoryConfirm.
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to clear all history for this challenge? This cannot be undone.'**
-  String get clearHistoryConfirm;
-
-  /// No description provided for @clear.
-  ///
-  /// In en, this message translates to:
-  /// **'Clear'**
-  String get clear;
-
-  /// No description provided for @noGamesPlayed.
-  ///
-  /// In en, this message translates to:
-  /// **'No games played yet'**
-  String get noGamesPlayed;
-
-  /// No description provided for @noGamesPlayedHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Complete a challenge to see your history!'**
-  String get noGamesPlayedHint;
-
-  /// No description provided for @justNow.
-  ///
-  /// In en, this message translates to:
-  /// **'Just now'**
-  String get justNow;
-
-  /// No description provided for @minAgo.
-  ///
-  /// In en, this message translates to:
-  /// **'{n}m ago'**
-  String minAgo(Object n);
-
-  /// No description provided for @hourAgo.
-  ///
-  /// In en, this message translates to:
-  /// **'{n}h ago'**
-  String hourAgo(Object n);
-
-  /// No description provided for @dayAgo.
-  ///
-  /// In en, this message translates to:
-  /// **'{n}d ago'**
-  String dayAgo(Object n);
-
-  /// No description provided for @dateFormat.
-  ///
-  /// In en, this message translates to:
-  /// **'{day}/{month}/{year}'**
-  String dateFormat(Object day, Object month, Object year);
-
-  /// No description provided for @correctOutOf.
-  ///
-  /// In en, this message translates to:
-  /// **'{correct}/10 correct'**
-  String correctOutOf(Object correct);
-
-  /// No description provided for @avg.
-  ///
-  /// In en, this message translates to:
-  /// **'avg'**
-  String get avg;
-
-  /// No description provided for @getReady.
-  ///
-  /// In en, this message translates to:
-  /// **'Get ready...'**
-  String get getReady;
-
-  /// No description provided for @timeUp.
-  ///
-  /// In en, this message translates to:
-  /// **'Time\'s Up!'**
-  String get timeUp;
-
-  /// No description provided for @correct.
-  ///
-  /// In en, this message translates to:
-  /// **'Correct!'**
-  String get correct;
-
-  /// No description provided for @wrong.
-  ///
-  /// In en, this message translates to:
-  /// **'Wrong!'**
-  String get wrong;
-
-  /// No description provided for @answerWas.
-  ///
-  /// In en, this message translates to:
-  /// **'Answer: {answer}'**
-  String answerWas(Object answer);
-
-  /// No description provided for @quitGame.
-  ///
-  /// In en, this message translates to:
-  /// **'Quit Game?'**
-  String get quitGame;
-
-  /// No description provided for @quitGameConfirm.
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to quit? Your progress will be lost.'**
-  String get quitGameConfirm;
-
-  /// No description provided for @keepPlaying.
-  ///
-  /// In en, this message translates to:
-  /// **'Keep Playing'**
-  String get keepPlaying;
-
-  /// No description provided for @quit.
-  ///
-  /// In en, this message translates to:
-  /// **'Quit'**
-  String get quit;
-
-  /// No description provided for @challengeComplete.
-  ///
-  /// In en, this message translates to:
-  /// **'Challenge Complete!'**
-  String get challengeComplete;
-
-  /// No description provided for @finalScore.
-  ///
-  /// In en, this message translates to:
-  /// **'Final Score'**
-  String get finalScore;
-
-  /// No description provided for @points.
-  ///
-  /// In en, this message translates to:
-  /// **'points'**
-  String get points;
-
-  /// No description provided for @correctStat.
-  ///
-  /// In en, this message translates to:
-  /// **'Correct'**
-  String get correctStat;
-
-  /// No description provided for @avgTimeStat.
-  ///
-  /// In en, this message translates to:
-  /// **'Avg Time (s)'**
-  String get avgTimeStat;
-
-  /// No description provided for @totalTimeStat.
-  ///
-  /// In en, this message translates to:
-  /// **'Total Time'**
-  String get totalTimeStat;
-
-  /// No description provided for @newHighScore.
-  ///
-  /// In en, this message translates to:
-  /// **'New High Score!'**
-  String get newHighScore;
-
-  /// No description provided for @playAgain.
-  ///
-  /// In en, this message translates to:
-  /// **'Play Again'**
-  String get playAgain;
-
-  /// No description provided for @home.
-  ///
-  /// In en, this message translates to:
-  /// **'Home'**
-  String get home;
+  String get appTitle => _get('appTitle');
+  String get appTagline => _get('appTagline');
+  String get nicknameHint => _get('nicknameHint');
+  String get warmUp => _get('warmUp');
+  String get competitions => _get('competitions');
+  String get comingSoon => _get('comingSoon');
+  String get comingSoonMessage => _get('comingSoonMessage');
+  String get ok => _get('ok');
+  String get cancel => _get('cancel');
+  String get warmUpChallenges => _get('warmUpChallenges');
+  String get noChallenges => _get('noChallenges');
+  String get retry => _get('retry');
+  String get best => _get('best');
+  String bestScore(Object score) => '$score pts';
+  String get bestScoreNone => _get('bestScoreNone');
+  String get play => _get('play');
+  String get history => _get('history');
+  String historyTitle(Object name) => '$name - History';
+  String get clearHistory => _get('clearHistory');
+  String get clearHistoryConfirm => _get('clearHistoryConfirm');
+  String get clear => _get('clear');
+  String get noGamesPlayed => _get('noGamesPlayed');
+  String get noGamesPlayedHint => _get('noGamesPlayedHint');
+  String get justNow => _get('justNow');
+  String minAgo(Object n) => '${n}m ago';
+  String hourAgo(Object n) => '${n}h ago';
+  String dayAgo(Object n) => '${n}d ago';
+  String dateFormat(Object day, Object month, Object year) =>
+      '$day/$month/$year';
+  String correctOutOf(Object correct) => '$correct/10 correct';
+  String get avg => _get('avg');
+  String get getReady => _get('getReady');
+  String get timeUp => _get('timeUp');
+  String get correct => _get('correct');
+  String get wrong => _get('wrong');
+  String answerWas(Object answer) => 'Answer: $answer';
+  String get quitGame => _get('quitGame');
+  String get quitGameConfirm => _get('quitGameConfirm');
+  String get keepPlaying => _get('keepPlaying');
+  String get quit => _get('quit');
+  String get challengeComplete => _get('challengeComplete');
+  String get finalScore => _get('finalScore');
+  String get points => _get('points');
+  String get coins => _get('coins');
+  String get correctStat => _get('correctStat');
+  String get avgTimeStat => _get('avgTimeStat');
+  String get totalTimeStat => _get('totalTimeStat');
+  String get newHighScore => _get('newHighScore');
+  String get playAgain => _get('playAgain');
+  String get home => _get('home');
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
-  Future<AppLocalizations> load(Locale locale) {
-    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
-  }
+  bool isSupported(Locale locale) => ['en'].contains(locale.languageCode);
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['en'].contains(locale.languageCode);
+  Future<AppLocalizations> load(Locale locale) async {
+    return AppLocalizations(locale);
+  }
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
-}
-
-AppLocalizations lookupAppLocalizations(Locale locale) {
-  // Lookup logic when only language code is specified.
-  switch (locale.languageCode) {
-    case 'en':
-      return AppLocalizationsEn();
-  }
-
-  throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
-  );
 }
