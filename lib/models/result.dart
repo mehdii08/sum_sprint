@@ -8,6 +8,16 @@ class Result {
   final DateTime date;
   final String playerName;
 
+  // ── Mind‑Timer–specific fields ───────────────────────────────────
+  /// Number of questions where the user stopped within the valid range.
+  final int withinRangeCount;
+
+  /// Average accuracy across all questions (0.0–1.0), or 0 if no questions.
+  final double averageAccuracy;
+
+  /// Whether this result is for a Mind‑Timer challenge.
+  final bool isMindTimer;
+
   Result({
     required this.challengeId,
     required this.score,
@@ -15,6 +25,9 @@ class Result {
     required this.totalResponseTimeMs,
     required this.date,
     this.playerName = '',
+    this.withinRangeCount = 0,
+    this.averageAccuracy = 0.0,
+    this.isMindTimer = false,
   });
 
   factory Result.fromJson(Map<String, dynamic> json) {
@@ -25,6 +38,9 @@ class Result {
       totalResponseTimeMs: json['totalResponseTimeMs'] as int,
       date: DateTime.parse(json['date'] as String),
       playerName: json['playerName'] as String? ?? '',
+      withinRangeCount: json['withinRangeCount'] as int? ?? 0,
+      averageAccuracy: (json['averageAccuracy'] as num?)?.toDouble() ?? 0.0,
+      isMindTimer: json['isMindTimer'] as bool? ?? false,
     );
   }
 
@@ -35,6 +51,9 @@ class Result {
         'totalResponseTimeMs': totalResponseTimeMs,
         'date': date.toIso8601String(),
         'playerName': playerName,
+        'withinRangeCount': withinRangeCount,
+        'averageAccuracy': averageAccuracy,
+        'isMindTimer': isMindTimer,
       };
 
   double get averageTimeSeconds =>

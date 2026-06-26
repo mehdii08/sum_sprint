@@ -9,6 +9,8 @@ class AuthProvider extends ChangeNotifier {
 
   bool _isLoading = false;
   String? _errorMessage;
+  bool _isAdmin = false;
+  Map<String, dynamic>? _cachedProfile;
 
   AuthProvider({SupabaseClient? client})
       : _client = client ?? Supabase.instance.client {
@@ -22,6 +24,7 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   String get userId => currentUser?.id ?? '';
+  bool get isAdmin => _isAdmin;
 
   String get telegramFirstName => tgFirstName;
   String get telegramLastName => tgLastName;
@@ -182,6 +185,8 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> signOut() async {
     await _client.auth.signOut();
+    _isAdmin = false;
+    _cachedProfile = null;
     notifyListeners();
   }
 
@@ -190,7 +195,14 @@ class AuthProvider extends ChangeNotifier {
       final uid = currentUser?.id;
       if (uid == null) return null;
       final r = await _client.from('profiles').select().eq('id', uid).maybeSingle();
-      return r != null ? Map<String, dynamic>.from(r as Map) : null;
+      if (r != null) {
+        final profile = Map<String, dynamic>.from(r as Map);
+        _isAdmin = profile['is_admin'] == true;
+        _cachedProfile = profile;
+        notifyListeners();
+        return profile;
+      }
+      return null;
     } catch (_) {
       return null;
     }

@@ -9,6 +9,7 @@ import 'challenge_list_screen.dart';
 import 'competitions_screen.dart';
 import 'login_screen.dart';
 import 'profile_screen.dart';
+import 'admin/admin_dashboard_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -141,11 +142,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
           // Loading spinner while authenticating
           if (_isCheckingTelegram)
-            const Center(
+            Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(
+                  const SizedBox(
                     width: 48,
                     height: 48,
                     child: CircularProgressIndicator(
@@ -153,10 +154,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   Text(
-                    'Connecting to Telegram',
-                    style: TextStyle(
+                    l10n.connectingTelegram,
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
@@ -290,7 +291,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 16),
 
                     // Competitions (logged in) or Sign In prompt (not logged in)
-                    if (isLoggedIn)
+                    if (isLoggedIn) ...[
                       SizedBox(
                         width: double.infinity, height: 56,
                         child: OutlinedButton(
@@ -323,7 +324,37 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
                         ),
-                      )
+                      ),
+
+                      // Admin button (only visible to admins)
+                      if (auth.isAdmin) ...[
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity, height: 48,
+                          child: TextButton.icon(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const AdminDashboardScreen(),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.admin_panel_settings,
+                                size: 20, color: Colors.white54),
+                            label: Text(l10n.adminPanel,
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.white54,
+                                    fontWeight: FontWeight.w500)),
+                            style: TextButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ]
                     else
                       // NOT logged in → prominent Sign-In button
                       Column(
@@ -339,13 +370,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                     borderRadius: BorderRadius.circular(16)),
                                 elevation: 8,
                               ),
-                              child: const Row(
+                              child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.login, size: 24),
-                                  SizedBox(width: 12),
-                                  Text('Sign In / Sign Up',
-                                      style: TextStyle(
+                                  const Icon(Icons.login, size: 24),
+                                  const SizedBox(width: 12),
+                                  Text(l10n.signInSignUp,
+                                      style: const TextStyle(
                                           fontSize: 22,
                                           fontWeight: FontWeight.bold)),
                                 ],
@@ -365,7 +396,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: const TextStyle(
                                   color: Colors.white70, fontSize: 16),
                               decoration: InputDecoration(
-                                hintText: 'Nickname for offline play',
+                                hintText: l10n.nicknameOfflineHint,
                                 hintStyle:
                                     const TextStyle(color: Colors.white38),
                                 icon: const Icon(Icons.person,

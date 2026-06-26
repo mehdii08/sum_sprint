@@ -4,6 +4,7 @@
     "name": "Easy Addition",
     "description": "Numbers 1-10, 5 seconds per question.",
     "operation": "+",
+    "challengeType": "math",
     "minNumber": 1,
     "maxNumber": 10,
     "timePerQuestionSeconds": 5,
@@ -14,6 +15,7 @@
     "name": "Medium Addition",
     "description": "Numbers 5-20, 4 seconds per question.",
     "operation": "+",
+    "challengeType": "math",
     "minNumber": 5,
     "maxNumber": 20,
     "timePerQuestionSeconds": 4,
@@ -24,9 +26,43 @@
     "name": "Hard Mix",
     "description": "Numbers 10-50, 3 seconds per question.",
     "operation": "+",
+    "challengeType": "math",
     "minNumber": 10,
     "maxNumber": 50,
     "timePerQuestionSeconds": 3,
     "questionCount": 10
+  },
+  {
+    "id": "mind_timer_easy",
+    "name": "Mind Timer – Easy",
+    "description": "Stop at 5.00s, 2s range window for full points.",
+    "operation": "mind_timer",
+    "challengeType": "mind_timer",
+    "targetSeconds": 5.0,
+    "rangeSeconds": 2.0,
+    "maxPoints": 1000,
+    "questionCount": 5
+  },
+  {
+    "id": "mind_timer_medium",
+    "name": "Mind Timer – Medium",
+    "description": "Stop at 10.00s, 1.5s range window for full points.",
+    "operation": "mind_timer",
+    "challengeType": "mind_timer",
+    "targetSeconds": 10.0,
+    "rangeSeconds": 1.5,
+    "maxPoints": 1000,
+    "questionCount": 5
+  },
+  {
+    "id": "mind_timer_hard",
+    "name": "Mind Timer – Hard",
+    "description": "Stop at 15.00s, 1.0s range window for full points.",
+    "operation": "mind_timer",
+    "challengeType": "mind_timer",
+    "targetSeconds": 15.0,
+    "rangeSeconds": 1.0,
+    "maxPoints": 1000,
+    "questionCount": 5
   }
 ]

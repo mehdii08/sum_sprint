@@ -5,6 +5,7 @@ import '../providers/result_provider.dart';
 import '../models/challenge_definition.dart';
 import '../l10n/app_localizations.dart';
 import 'game_screen.dart';
+import 'mind_timer_game_screen.dart';
 import 'history_screen.dart';
 
 class ChallengeListScreen extends StatelessWidget {
@@ -67,6 +68,18 @@ class _ChallengeCard extends StatelessWidget {
   const _ChallengeCard({required this.challenge, required this.l10n});
 
   Color _getDifficultyColor() {
+    if (challenge.isMindTimer) {
+      switch (challenge.id) {
+        case 'mind_timer_easy':
+          return Colors.teal;
+        case 'mind_timer_medium':
+          return Colors.blue;
+        case 'mind_timer_hard':
+          return Colors.deepPurple;
+        default:
+          return Colors.indigo;
+      }
+    }
     switch (challenge.id) {
       case 'easy_add':
         return Colors.green;
@@ -80,6 +93,7 @@ class _ChallengeCard extends StatelessWidget {
   }
 
   IconData _getDifficultyIcon() {
+    if (challenge.isMindTimer) return Icons.timer;
     switch (challenge.id) {
       case 'easy_add':
         return Icons.sentiment_satisfied;
@@ -211,11 +225,13 @@ class _ChallengeCard extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => GameScreen(challenge: challenge),
+                          builder: (_) => challenge.isMindTimer
+                              ? MindTimerGameScreen(challenge: challenge)
+                              : GameScreen(challenge: challenge),
                         ),
                       );
                     },
-                    icon: const Icon(Icons.play_arrow),
+                    icon: Icon(challenge.isMindTimer ? Icons.timer : Icons.play_arrow),
                     label: Text(
                       l10n.play,
                       style: const TextStyle(

@@ -10,6 +10,7 @@ create table if not exists public.profiles (
   telegram_username text default null,
   points int default 500,
   login_code text default '1234',
+  is_admin boolean default false,
   created_at timestamp with time zone default now()
 );
 
@@ -21,6 +22,17 @@ begin
     where table_name = 'profiles' and column_name = 'telegram_username'
   ) then
     alter table public.profiles add column telegram_username text default null;
+  end if;
+end $$;
+
+-- Add is_admin column if migrating from a schema without it.
+do $$
+begin
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'profiles' and column_name = 'is_admin'
+  ) then
+    alter table public.profiles add column is_admin boolean default false;
   end if;
 end $$;
 

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/competition.dart';
 import '../../models/challenge_definition.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Admin competitions management — list, create, update, delete.
 class AdminCompetitionsScreen extends StatefulWidget {
@@ -39,17 +40,18 @@ class _AdminCompetitionsScreenState extends State<AdminCompetitionsScreen> {
   }
 
   Future<void> _delete(String id) async {
+    final l10n = AppLocalizations.of(context);
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Competition'),
-        content: const Text('This will also remove participants and results. Continue?'),
+        title: Text(l10n.adminDeleteCompetitionTitle),
+        content: Text(l10n.adminDeleteCompetitionMsg),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.adminCancel)),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(l10n.adminDelete),
           ),
         ],
       ),
@@ -70,15 +72,16 @@ class _AdminCompetitionsScreenState extends State<AdminCompetitionsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manage Competitions'),
+        title: Text(l10n.adminManageCompetitions),
         backgroundColor: const Color(0xFF1A237E),
         foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            tooltip: 'Create',
+            tooltip: l10n.adminCreate,
             onPressed: () async {
               final created = await Navigator.push<Map<String, dynamic>>(
                 context,
@@ -107,7 +110,7 @@ class _AdminCompetitionsScreenState extends State<AdminCompetitionsScreen> {
                     children: [
                       Text(_error!, style: const TextStyle(color: Colors.red)),
                       const SizedBox(height: 12),
-                      ElevatedButton(onPressed: _load, child: const Text('Retry')),
+                      ElevatedButton(onPressed: _load, child: Text(l10n.adminRetry)),
                     ],
                   ),
                 )
@@ -144,9 +147,9 @@ class _AdminCompetitionsScreenState extends State<AdminCompetitionsScreen> {
                                 _delete(c.id);
                               }
                             },
-                            itemBuilder: (_) => const [
-                              PopupMenuItem(value: 'edit', child: ListTile(leading: Icon(Icons.edit), title: Text('Edit'))),
-                              PopupMenuItem(value: 'delete', child: ListTile(leading: Icon(Icons.delete, color: Colors.red), title: Text('Delete', style: TextStyle(color: Colors.red)))),
+                            itemBuilder: (_) => [
+                              PopupMenuItem(value: 'edit', child: ListTile(leading: const Icon(Icons.edit), title: Text(l10n.adminEdit))),
+                              PopupMenuItem(value: 'delete', child: ListTile(leading: const Icon(Icons.delete, color: Colors.red), title: Text(l10n.adminDelete, style: const TextStyle(color: Colors.red)))),
                             ],
                           ),
                         ),
@@ -261,15 +264,25 @@ class _CompetitionFormState extends State<_CompetitionForm> {
 
   void _onSave() {
     if (!_formKey.currentState!.validate()) return;
-    final challenges = _challenges.map((fc) => {
-      'id': fc.id,
-      'name': fc.name,
-      'description': fc.name,
-      'operation': '+',
-      'minNumber': fc.min,
-      'maxNumber': fc.max,
-      'timePerQuestionSeconds': fc.time,
-      'questionCount': fc.qCount,
+    final challenges = _challenges.map((fc) {
+      final isMindTimer = fc.type == 'mind_timer';
+      return {
+        'id': fc.id,
+        'name': fc.name,
+        'description': fc.name,
+        'operation': isMindTimer ? 'mind_timer' : '+',
+        'challengeType': fc.type,
+        'questionCount': fc.qCount,
+        if (isMindTimer) ...{
+          'targetSeconds': fc.targetSeconds,
+          'rangeSeconds': fc.rangeSeconds,
+          'maxPoints': fc.maxPoints,
+        } else ...{
+          'minNumber': fc.min,
+          'maxNumber': fc.max,
+          'timePerQuestionSeconds': fc.time,
+        },
+      };
     }).toList();
     Navigator.pop(context, {
       'name': _name.text.trim(),
@@ -288,21 +301,22 @@ class _CompetitionFormState extends State<_CompetitionForm> {
   @override
   Widget build(BuildContext context) {
     final editing = widget.competition != null;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(editing ? 'Edit Competition' : 'New Competition'),
+        title: Text(editing ? l10n.adminEditCompetition : l10n.adminNewCompetition),
         backgroundColor: const Color(0xFF1A237E),
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
-          tooltip: 'Cancel',
+          tooltip: l10n.adminCancel,
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
             onPressed: _onSave,
-            tooltip: 'Save',
+            tooltip: l10n.adminSave,
           ),
         ],
       ),
@@ -315,18 +329,18 @@ class _CompetitionFormState extends State<_CompetitionForm> {
             // ── Name & Description (keyboard kept) ────────────────
             TextFormField(
               controller: _name,
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.adminNameLabel,
+                border: const OutlineInputBorder(),
               ),
-              validator: (v) => v!.trim().isEmpty ? 'Required' : null,
+              validator: (v) => v!.trim().isEmpty ? l10n.adminNameRequired : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _desc,
-              decoration: const InputDecoration(
-                labelText: 'Description',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.adminDescriptionLabel,
+                border: const OutlineInputBorder(),
               ),
               maxLines: 2,
             ),
@@ -335,7 +349,7 @@ class _CompetitionFormState extends State<_CompetitionForm> {
 
             // ── Entry Coins ───────────────────────────────────────
             _NumericField(
-              label: 'Entry Coins',
+              label: l10n.adminEntryCoins,
               icon: Icons.monetization_on,
               value: _entryCoins,
               step: 100,
@@ -345,7 +359,7 @@ class _CompetitionFormState extends State<_CompetitionForm> {
 
             // ── Prize Pool ────────────────────────────────────────
             _NumericField(
-              label: 'Prize Pool (coins)',
+              label: l10n.adminPrizePool,
               icon: Icons.emoji_events,
               value: _prizePool,
               step: 100,
@@ -355,7 +369,7 @@ class _CompetitionFormState extends State<_CompetitionForm> {
 
             // ── Winners ───────────────────────────────────────────
             _NumericField(
-              label: 'Winners',
+              label: l10n.adminWinners,
               icon: Icons.workspace_premium,
               value: _winnerCount,
               step: 1,
@@ -373,7 +387,7 @@ class _CompetitionFormState extends State<_CompetitionForm> {
             // ── Dynamic Winner Shares ─────────────────────────────
             if (_shares.isNotEmpty) ...[
               Text(
-                'Winner Shares',
+                l10n.adminWinnerShares,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -402,14 +416,14 @@ class _CompetitionFormState extends State<_CompetitionForm> {
             // ── Status ────────────────────────────────────────────
             DropdownButtonFormField<String>(
               value: _status,
-              decoration: const InputDecoration(
-                labelText: 'Status',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.adminStatus,
+                border: const OutlineInputBorder(),
               ),
-              items: const [
-                DropdownMenuItem(value: 'upcoming', child: Text('Upcoming')),
-                DropdownMenuItem(value: 'active', child: Text('Active')),
-                DropdownMenuItem(value: 'finished', child: Text('Finished')),
+              items: [
+                DropdownMenuItem(value: 'upcoming', child: Text(l10n.adminUpcoming)),
+                DropdownMenuItem(value: 'active', child: Text(l10n.adminActive)),
+                DropdownMenuItem(value: 'finished', child: Text(l10n.adminFinished)),
               ],
               onChanged: (v) { if (v != null) setState(() => _status = v); },
             ),
@@ -451,7 +465,7 @@ class _CompetitionFormState extends State<_CompetitionForm> {
             Row(
               children: [
                 Text(
-                  'Challenges',
+                  l10n.adminChallenges,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -461,8 +475,8 @@ class _CompetitionFormState extends State<_CompetitionForm> {
                 const Spacer(),
                 IconButton.filled(
                   icon: const Icon(Icons.add),
-                  onPressed: () => setState(() => _challenges.add(_ChallengeField())),
-                  tooltip: 'Add challenge',
+                  onPressed: () => _addChallengeWithTypePicker(),
+                  tooltip: l10n.adminAddChallenge,
                   style: IconButton.styleFrom(
                     backgroundColor: const Color(0xFF1A237E),
                     foregroundColor: Colors.white,
@@ -475,6 +489,7 @@ class _CompetitionFormState extends State<_CompetitionForm> {
             ..._challenges.asMap().entries.map((e) {
               final i = e.key;
               final fc = e.value;
+              final isMindTimer = fc.type == 'mind_timer';
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 shape: RoundedRectangleBorder(
@@ -487,22 +502,31 @@ class _CompetitionFormState extends State<_CompetitionForm> {
                     children: [
                       Row(
                         children: [
-                          Expanded(
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: isMindTimer
+                                  ? Colors.indigo.withAlpha(25)
+                                  : Colors.orange.withAlpha(25),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                             child: Text(
-                              'Challenge ${i + 1}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14,
+                              isMindTimer ? l10n.adminTypeMindTimer : l10n.adminTypeMath,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: isMindTimer ? Colors.indigo : Colors.orange,
                               ),
                             ),
                           ),
+                          const Spacer(),
                           if (_challenges.length > 1)
                             IconButton(
                               icon: const Icon(Icons.delete_outline,
                                   color: Colors.red, size: 20),
                               onPressed: () =>
                                   setState(() => _challenges.removeAt(i)),
-                              tooltip: 'Remove challenge',
+                              tooltip: l10n.adminRemoveChallenge,
                               visualDensity: VisualDensity.compact,
                             ),
                         ],
@@ -528,71 +552,133 @@ class _CompetitionFormState extends State<_CompetitionForm> {
                       const SizedBox(height: 8),
                       TextFormField(
                         initialValue: fc.name,
-                        decoration: const InputDecoration(
-                          labelText: 'Challenge Name',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: l10n.adminChallengeName,
+                          border: const OutlineInputBorder(),
                           isDense: true,
                         ),
                         onChanged: (v) => fc.name = v,
                       ),
                       const SizedBox(height: 10),
-                      // Min & Max — numeric with +/- (default 1 & 10, step 1)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _NumericField(
-                              label: 'Min',
-                              value: fc.min,
-                              step: 10,
-                              min: 1,
-                              max: 999,
-                              compact: true,
-                              onChanged: (v) => setState(() => fc.min = v),
+                      // Type-specific fields
+                      if (isMindTimer) ...[
+                        // Target Seconds, Range Seconds, Max Points
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _NumericDoubleField(
+                                label: l10n.adminTargetS,
+                                value: fc.targetSeconds,
+                                step: 1.0,
+                                min: 1.0,
+                                max: 120.0,
+                                compact: true,
+                                decimals: 1,
+                                onChanged: (v) => setState(() => fc.targetSeconds = v),
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _NumericField(
-                              label: 'Max',
-                              value: fc.max,
-                              step: 10,
-                              min: 1,
-                              max: 9999,
-                              compact: true,
-                              onChanged: (v) => setState(() => fc.max = v),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _NumericDoubleField(
+                                label: l10n.adminRangeS,
+                                value: fc.rangeSeconds,
+                                step: 0.5,
+                                min: 0.5,
+                                max: 60.0,
+                                compact: true,
+                                decimals: 1,
+                                onChanged: (v) => setState(() => fc.rangeSeconds = v),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      // Time & Questions — numeric with +/- (default 5 & 10, step 1)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _NumericField(
-                              label: 'Time (s)',
-                              value: fc.time,
-                              step: 1,
-                              min: 1,
-                              max: 300,
-                              compact: true,
-                              onChanged: (v) => setState(() => fc.time = v),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _NumericField(
+                                label: l10n.adminMaxPoints,
+                                value: fc.maxPoints,
+                                step: 100,
+                                min: 100,
+                                max: 10000,
+                                compact: true,
+                                onChanged: (v) => setState(() => fc.maxPoints = v),
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _NumericField(
-                              label: 'Questions',
-                              value: fc.qCount,
-                              step: 1,
-                              min: 1,
-                              max: 100,
-                              compact: true,
-                              onChanged: (v) => setState(() => fc.qCount = v),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _NumericField(
+                                label: l10n.adminQuestions,
+                                value: fc.qCount,
+                                step: 1,
+                                min: 1,
+                                max: 100,
+                                compact: true,
+                                onChanged: (v) => setState(() => fc.qCount = v),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
+                      ] else ...[
+                        // Math: Min & Max
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _NumericField(
+                                label: l10n.adminMin,
+                                value: fc.min,
+                                step: 10,
+                                min: 1,
+                                max: 999,
+                                compact: true,
+                                onChanged: (v) => setState(() => fc.min = v),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _NumericField(
+                                label: l10n.adminMax,
+                                value: fc.max,
+                                step: 10,
+                                min: 1,
+                                max: 9999,
+                                compact: true,
+                                onChanged: (v) => setState(() => fc.max = v),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        // Time & Questions
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _NumericField(
+                                label: l10n.adminTimeS,
+                                value: fc.time,
+                                step: 1,
+                                min: 1,
+                                max: 300,
+                                compact: true,
+                                onChanged: (v) => setState(() => fc.time = v),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _NumericField(
+                                label: l10n.adminQuestions,
+                                value: fc.qCount,
+                                step: 1,
+                                min: 1,
+                                max: 100,
+                                compact: true,
+                                onChanged: (v) => setState(() => fc.qCount = v),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -604,6 +690,71 @@ class _CompetitionFormState extends State<_CompetitionForm> {
         ),
       ),
     );
+  }
+
+  // ── Type picker dialog ──────────────────────────────────────────
+  Future<void> _addChallengeWithTypePicker() async {
+    final l10n = AppLocalizations.of(context);
+    final type = await showDialog<String>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(l10n.adminSelectType),
+        children: [
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(ctx, 'math'),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withAlpha(25),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.calculate, color: Colors.orange),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l10n.adminTypeMath, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(l10n.adminTypeMathDesc,
+                        style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(ctx, 'mind_timer'),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.indigo.withAlpha(25),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.timer, color: Colors.indigo),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l10n.adminTypeMindTimer,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(l10n.adminTypeMindTimerDesc,
+                        style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    if (type != null) {
+      setState(() => _challenges.add(_ChallengeField(type: type)));
+    }
   }
 }
 
@@ -743,24 +894,134 @@ int _challengeIdCounter = 0;
 class _ChallengeField {
   final String id;
   String name = '';
+  String type; // 'math' or 'mind_timer'
+
+  // Math fields
   int min = 1;
   int max = 10;
   int time = 5;
+
+  // Mind Timer fields
+  double targetSeconds = 5.0;
+  double rangeSeconds = 2.0;
+  int maxPoints = 1000;
+
+  // Common
   int qCount = 10;
 
-  _ChallengeField() : id = _generateId();
+  _ChallengeField({this.type = 'math'}) : id = _generateId() {
+    if (type == 'mind_timer') {
+      qCount = 5;
+      maxPoints = 1000;
+    }
+  }
 
   _ChallengeField.fromChallenge(ChallengeDefinition ch)
       : id = ch.id,
         name = ch.name,
+        type = ch.isMindTimer ? 'mind_timer' : 'math',
         min = ch.minNumber,
         max = ch.maxNumber,
         time = ch.timePerQuestionSeconds,
+        targetSeconds = ch.targetSeconds,
+        rangeSeconds = ch.rangeSeconds,
+        maxPoints = ch.maxPoints,
         qCount = ch.questionCount;
 
   static String _generateId() {
     _challengeIdCounter++;
     final ts = DateTime.now().millisecondsSinceEpoch.remainder(100000);
     return 'ch_${ts}_$_challengeIdCounter';
+  }
+}
+
+// ── Double numeric +/- widget ─────────────────────────────────────
+
+class _NumericDoubleField extends StatelessWidget {
+  final String label;
+  final double value;
+  final double step;
+  final double min;
+  final double max;
+  final bool compact;
+  final int decimals;
+  final ValueChanged<double> onChanged;
+
+  const _NumericDoubleField({
+    required this.label,
+    required this.value,
+    required this.step,
+    this.min = 0.0,
+    this.max = double.infinity,
+    this.compact = false,
+    this.decimals = 1,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final minusEnabled = value - step >= min;
+    final plusEnabled = value + step <= max;
+
+    return Container(
+      padding: compact
+          ? EdgeInsets.zero
+          : const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+        color: Colors.grey.shade50,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: compact ? 11 : 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value.toStringAsFixed(decimals),
+                  style: TextStyle(
+                    fontSize: compact ? 18 : 22,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1A237E),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _StepButton(
+            icon: Icons.remove,
+            enabled: minusEnabled,
+            compact: compact,
+            onTap: minusEnabled
+                ? () {
+                    final newVal = (value - step).clamp(min, max);
+                    onChanged(double.parse(newVal.toStringAsFixed(decimals)));
+                  }
+                : null,
+          ),
+          SizedBox(width: compact ? 4 : 8),
+          _StepButton(
+            icon: Icons.add,
+            enabled: plusEnabled,
+            compact: compact,
+            onTap: plusEnabled
+                ? () {
+                    final newVal = (value + step).clamp(min, max);
+                    onChanged(double.parse(newVal.toStringAsFixed(decimals)));
+                  }
+                : null,
+          ),
+        ],
+      ),
+    );
   }
 }

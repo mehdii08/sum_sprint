@@ -83,11 +83,81 @@ class AppLocalizations {
     'points': 'points',
     'coins': 'coins',
     'correctStat': 'Correct',
+    'withinRangeStat': 'Within Range',
+    'avgAccuracyStat': 'Avg Accuracy',
     'avgTimeStat': 'Avg Time (s)',
     'totalTimeStat': 'Total Time',
     'newHighScore': 'New High Score!',
     'playAgain': 'Play Again',
     'home': 'Home',
+    // ── Mind Timer ───────────────────────────────────────────────
+    'mindTimerReadyPrompt': 'When you tap Start, count in your head and stop as close to the target as possible.',
+    'mindTimerStart': 'Start',
+    'mindTimerStop': 'Stop',
+    'mindTimerCounting': 'Counting...',
+    'mindTimerCountingHint': 'Count in your head. No visible timer.',
+    'mindTimerPerfect': 'Perfect!',
+    'mindTimerAmazing': 'Amazing!',
+    'mindTimerGreat': 'Great!',
+    'mindTimerClose': 'Close!',
+    'mindTimerAlmost': 'Almost...',
+    'mindTimerWayOff': 'Way off',
+    'mindTimerOutsideRange': 'Outside range',
+    'mindTimerPoints': 'points',
+    'mindTimerOffBy': 'Off by {diff}s',
+    'stopAtExactly': 'Stop at exactly',
+    'submittingScore': 'Submitting score...',
+    'scoreSubmitted': 'Score submitted!',
+    'scoreSavedLocally': 'Score saved locally. Sync will retry later.',
+    'backToCompetition': 'Back to Competition',
+    // ── Admin ────────────────────────────────────────────────────
+    'adminAccessDenied': 'Admin access denied',
+    'adminAccessDeniedMsg': 'You do not have admin privileges.',
+    'adminDashboard': 'Admin Dashboard',
+    'adminCompetitions': 'Competitions',
+    'adminCompetitionsSubtitle': 'Create, update, and delete competitions',
+    'adminNewCompetition': 'New Competition',
+    'adminEditCompetition': 'Edit Competition',
+    'adminManageCompetitions': 'Manage Competitions',
+    'adminDeleteCompetitionTitle': 'Delete Competition',
+    'adminDeleteCompetitionMsg': 'This will also remove participants and results. Continue?',
+    'adminCancel': 'Cancel',
+    'adminDelete': 'Delete',
+    'adminEdit': 'Edit',
+    'adminCreate': 'Create',
+    'adminNameLabel': 'Name',
+    'adminNameRequired': 'Required',
+    'adminDescriptionLabel': 'Description',
+    'adminEntryCoins': 'Entry Coins',
+    'adminPrizePool': 'Prize Pool (coins)',
+    'adminWinners': 'Winners',
+    'adminWinnerShares': 'Winner Shares',
+    'adminStatus': 'Status',
+    'adminUpcoming': 'Upcoming',
+    'adminActive': 'Active',
+    'adminFinished': 'Finished',
+    'adminChallenges': 'Challenges',
+    'adminAddChallenge': 'Add challenge',
+    'adminRemoveChallenge': 'Remove challenge',
+    'adminChallengeName': 'Challenge Name',
+    'adminMin': 'Min',
+    'adminMax': 'Max',
+    'adminTimeS': 'Time (s)',
+    'adminQuestions': 'Questions',
+    'adminTargetS': 'Target (s)',
+    'adminRangeS': 'Range (s)',
+    'adminMaxPoints': 'Max Points',
+    'adminTypeMath': 'Math',
+    'adminTypeMindTimer': 'Mind Timer',
+    'adminTypeMathDesc': 'Addition, subtraction, etc.',
+    'adminTypeMindTimerDesc': 'Stop a hidden timer at the target',
+    'adminSelectType': 'Select Challenge Type',
+    'adminSave': 'Save',
+    'adminRetry': 'Retry',
+    'adminPanel': 'Admin Panel',
+    'signInSignUp': 'Sign In / Sign Up',
+    'nicknameOfflineHint': 'Nickname for offline play',
+    'connectingTelegram': 'Connecting to Telegram',
   };
 
   // ── getters and parameterized methods ──
@@ -142,6 +212,82 @@ class AppLocalizations {
   String get newHighScore => _get('newHighScore');
   String get playAgain => _get('playAgain');
   String get home => _get('home');
+  String get withinRangeStat => _get('withinRangeStat');
+  String get avgAccuracyStat => _get('avgAccuracyStat');
+
+  // ── Mind Timer ──────────────────────────────────────────────────
+  String get mindTimerReadyPrompt => _get('mindTimerReadyPrompt');
+  String get mindTimerStart => _get('mindTimerStart');
+  String get mindTimerStop => _get('mindTimerStop');
+  String get mindTimerCounting => _get('mindTimerCounting');
+  String get mindTimerCountingHint => _get('mindTimerCountingHint');
+  String get mindTimerPerfect => _get('mindTimerPerfect');
+  String get mindTimerAmazing => _get('mindTimerAmazing');
+  String get mindTimerGreat => _get('mindTimerGreat');
+  String get mindTimerClose => _get('mindTimerClose');
+  String get mindTimerAlmost => _get('mindTimerAlmost');
+  String get mindTimerWayOff => _get('mindTimerWayOff');
+  String get mindTimerOutsideRange => _get('mindTimerOutsideRange');
+  String get mindTimerPoints => _get('mindTimerPoints');
+  String mindTimerOffBy(Object diff) => 'Off by ${diff}s';
+
+  // ── Result / submission ──────────────────────────────────────
+  String get submittingScore => _get('submittingScore');
+  String get scoreSubmitted => _get('scoreSubmitted');
+  String get scoreSavedLocally => _get('scoreSavedLocally');
+  String get backToCompetition => _get('backToCompetition');
+
+  // ── Mind Timer extra ──────────────────────────────────────────
+  String get stopAtExactly => _get('stopAtExactly');
+
+  // ── Admin ──────────────────────────────────────────────────────
+  String get adminAccessDenied => _get('adminAccessDenied');
+  String get adminAccessDeniedMsg => _get('adminAccessDeniedMsg');
+  String get adminDashboard => _get('adminDashboard');
+  String get adminCompetitions => _get('adminCompetitions');
+  String get adminCompetitionsSubtitle => _get('adminCompetitionsSubtitle');
+  String get adminNewCompetition => _get('adminNewCompetition');
+  String get adminEditCompetition => _get('adminEditCompetition');
+  String get adminManageCompetitions => _get('adminManageCompetitions');
+  String get adminDeleteCompetitionTitle => _get('adminDeleteCompetitionTitle');
+  String get adminDeleteCompetitionMsg => _get('adminDeleteCompetitionMsg');
+  String get adminCancel => _get('adminCancel');
+  String get adminDelete => _get('adminDelete');
+  String get adminEdit => _get('adminEdit');
+  String get adminCreate => _get('adminCreate');
+  String get adminNameLabel => _get('adminNameLabel');
+  String get adminNameRequired => _get('adminNameRequired');
+  String get adminDescriptionLabel => _get('adminDescriptionLabel');
+  String get adminEntryCoins => _get('adminEntryCoins');
+  String get adminPrizePool => _get('adminPrizePool');
+  String get adminWinners => _get('adminWinners');
+  String get adminWinnerShares => _get('adminWinnerShares');
+  String get adminStatus => _get('adminStatus');
+  String get adminUpcoming => _get('adminUpcoming');
+  String get adminActive => _get('adminActive');
+  String get adminFinished => _get('adminFinished');
+  String get adminChallenges => _get('adminChallenges');
+  String get adminAddChallenge => _get('adminAddChallenge');
+  String get adminRemoveChallenge => _get('adminRemoveChallenge');
+  String get adminChallengeName => _get('adminChallengeName');
+  String get adminMin => _get('adminMin');
+  String get adminMax => _get('adminMax');
+  String get adminTimeS => _get('adminTimeS');
+  String get adminQuestions => _get('adminQuestions');
+  String get adminTargetS => _get('adminTargetS');
+  String get adminRangeS => _get('adminRangeS');
+  String get adminMaxPoints => _get('adminMaxPoints');
+  String get adminTypeMath => _get('adminTypeMath');
+  String get adminTypeMindTimer => _get('adminTypeMindTimer');
+  String get adminTypeMathDesc => _get('adminTypeMathDesc');
+  String get adminTypeMindTimerDesc => _get('adminTypeMindTimerDesc');
+  String get adminSelectType => _get('adminSelectType');
+  String get adminSave => _get('adminSave');
+  String get adminRetry => _get('adminRetry');
+  String get adminPanel => _get('adminPanel');
+  String get signInSignUp => _get('signInSignUp');
+  String get nicknameOfflineHint => _get('nicknameOfflineHint');
+  String get connectingTelegram => _get('connectingTelegram');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

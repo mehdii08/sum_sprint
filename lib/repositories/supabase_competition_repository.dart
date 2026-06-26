@@ -243,6 +243,10 @@ class SupabaseCompetitionRepository {
         'correct_count': result.correctCount,
         'total_time_ms': result.totalResponseTimeMs,
         'created_at': DateTime.now().toUtc().toIso8601String(),
+        if (result.isMindTimer) ...{
+          'accuracy': result.averageAccuracy,
+          'is_mind_timer': true,
+        },
       });
       _log('submitChallengeResult — INSERT ok');
     } catch (e) {

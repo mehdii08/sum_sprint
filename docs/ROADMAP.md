@@ -34,6 +34,13 @@
 - **SupabaseCompetitionRepository**: Competition-specific CRUD operations
 - **Offline mode preserved**: Warm Up uses `LocalResultRepository` unchanged
 
+### ✅ Recently Added (v2)
+- **Mind Timer challenge type**: Stop a hidden timer as close to a target as possible
+- **3 bundled Mind Timer presets**: Easy (5s/2s range), Medium (10s/1.5s range), Hard (15s/1s range)
+- **Admin panel**: Challenge type selector (Math / Mind Timer) when creating/editing competitions
+- **Admin RLS**: `is_admin` column on profiles, admin-only insert/update/delete on competitions
+- **Scoring formula**: `points = round(maxPoints × (1 - |diff|/range))`, 0 outside range
+
 ### 🔜 Planned (v2-beta)
 - Competitions fetched from server API instead of hardcoded JSON (challenges.json still works offline)
 - Prize distribution on competition end

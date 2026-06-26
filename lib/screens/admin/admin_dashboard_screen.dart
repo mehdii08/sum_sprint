@@ -1,15 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'admin_competitions_screen.dart';
+import '../../providers/auth_provider.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Admin dashboard — shortcuts to management pages.
+///
+/// Access is restricted to users with `is_admin = true` in their profile.
+/// The button to reach this screen is only shown to admins on the home screen,
+/// but this double-check prevents deep-link access.
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final auth = context.watch<AuthProvider>();
+
+    if (!auth.isAdmin) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.adminAccessDenied),
+          backgroundColor: const Color(0xFF1A237E),
+          foregroundColor: Colors.white,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.lock, size: 64, color: Colors.grey),
+              const SizedBox(height: 16),
+              Text(l10n.adminAccessDeniedMsg,
+                  style: const TextStyle(fontSize: 16, color: Colors.grey)),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin Dashboard'),
+        title: Text(l10n.adminDashboard),
         backgroundColor: const Color(0xFF1A237E),
         foregroundColor: Colors.white,
       ),
@@ -18,8 +49,8 @@ class AdminDashboardScreen extends StatelessWidget {
         children: [
           _Card(
             icon: Icons.emoji_events,
-            title: 'Competitions',
-            subtitle: 'Create, update, and delete competitions',
+            title: l10n.adminCompetitions,
+            subtitle: l10n.adminCompetitionsSubtitle,
             color: Colors.amber,
             onTap: () => Navigator.push(
               context,

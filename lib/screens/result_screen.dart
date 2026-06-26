@@ -5,9 +5,11 @@ import '../models/result.dart';
 import '../models/challenge_definition.dart';
 import '../providers/result_provider.dart';
 import '../providers/challenge_provider.dart';
+import '../providers/mind_timer_provider.dart';
 import '../providers/competition_provider.dart';
 import '../l10n/app_localizations.dart';
 import 'game_screen.dart';
+import 'mind_timer_game_screen.dart';
 import 'home_screen.dart';
 
 class ResultScreen extends StatefulWidget {
@@ -59,9 +61,10 @@ class _ResultScreenState extends State<ResultScreen> {
     } catch (e) {
       debugPrint('_submitToCompetition error: $e');
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         setState(() {
           _submitting = false;
-          _submitError = 'Score saved locally. Sync will retry later.';
+          _submitError = l10n.scoreSavedLocally;
         });
       }
     }
@@ -113,9 +116,9 @@ class _ResultScreenState extends State<ResultScreen> {
 
                     // Submission status
                     if (_submitting)
-                      _statusBanner(Icons.cloud_upload, 'Submitting score...', Colors.white70, Colors.white.withAlpha(30)),
+                      _statusBanner(Icons.cloud_upload, l10n.submittingScore, Colors.white70, Colors.white.withAlpha(30)),
                     if (_submitted)
-                      _statusBanner(Icons.cloud_done, 'Score submitted!', Colors.green, Colors.green.shade400.withAlpha(50)),
+                      _statusBanner(Icons.cloud_done, l10n.scoreSubmitted, Colors.green, Colors.green.shade400.withAlpha(50)),
                     if (_submitError != null)
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -129,7 +132,7 @@ class _ResultScreenState extends State<ResultScreen> {
                             const Icon(Icons.cloud_off, color: Colors.red, size: 20),
                             const SizedBox(width: 8),
                             Expanded(child: Text(_submitError!, style: const TextStyle(color: Colors.red, fontSize: 13))),
-                            TextButton(onPressed: _submitToCompetition, child: const Text('Retry', style: TextStyle(fontSize: 12))),
+                            TextButton(onPressed: _submitToCompetition, child: Text(l10n.retry, style: const TextStyle(fontSize: 12))),
                           ],
                         ),
                       ),
@@ -153,14 +156,23 @@ class _ResultScreenState extends State<ResultScreen> {
                           const Divider(height: 32),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              _StatItem(icon: Icons.check_circle, color: Colors.green,
-                                  value: '${widget.result.correctCount}/${widget.challenge.questionCount}', label: l10n.correctStat),
-                              _StatItem(icon: Icons.timer, color: Colors.blue,
-                                  value: widget.result.averageTimeSeconds.toStringAsFixed(1), label: l10n.avgTimeStat),
-                              _StatItem(icon: Icons.speed, color: Colors.purple,
-                                  value: '${(widget.result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s', label: l10n.totalTimeStat),
-                            ],
+                            children: widget.result.isMindTimer
+                                ? [
+                                    _StatItem(icon: Icons.check_circle, color: Colors.green,
+                                        value: '${widget.result.withinRangeCount}/${widget.challenge.questionCount}', label: l10n.withinRangeStat),
+                                    _StatItem(icon: Icons.speed, color: Colors.blue,
+                                        value: '${(widget.result.averageAccuracy * 100).toStringAsFixed(0)}%', label: l10n.avgAccuracyStat),
+                                    _StatItem(icon: Icons.timer, color: Colors.purple,
+                                        value: '${(widget.result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s', label: l10n.totalTimeStat),
+                                  ]
+                                : [
+                                    _StatItem(icon: Icons.check_circle, color: Colors.green,
+                                        value: '${widget.result.correctCount}/${widget.challenge.questionCount}', label: l10n.correctStat),
+                                    _StatItem(icon: Icons.timer, color: Colors.blue,
+                                        value: widget.result.averageTimeSeconds.toStringAsFixed(1), label: l10n.avgTimeStat),
+                                    _StatItem(icon: Icons.speed, color: Colors.purple,
+                                        value: '${(widget.result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s', label: l10n.totalTimeStat),
+                                  ],
                           ),
                         ],
                       ),
@@ -198,9 +210,15 @@ class _ResultScreenState extends State<ResultScreen> {
                         width: double.infinity, height: 56,
                         child: ElevatedButton.icon(
                           onPressed: () {
-                            context.read<ChallengeProvider>().reset();
-                            Navigator.pushReplacement(context,
-                                MaterialPageRoute(builder: (_) => GameScreen(challenge: widget.challenge, competitionId: widget.competitionId)));
+                            if (widget.challenge.isMindTimer) {
+                              context.read<MindTimerProvider>().reset();
+                              Navigator.pushReplacement(context,
+                                  MaterialPageRoute(builder: (_) => MindTimerGameScreen(challenge: widget.challenge, competitionId: widget.competitionId)));
+                            } else {
+                              context.read<ChallengeProvider>().reset();
+                              Navigator.pushReplacement(context,
+                                  MaterialPageRoute(builder: (_) => GameScreen(challenge: widget.challenge, competitionId: widget.competitionId)));
+                            }
                           },
                           icon: const Icon(Icons.replay),
                           label: Text(l10n.playAgain, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -219,6 +237,7 @@ class _ResultScreenState extends State<ResultScreen> {
                       child: OutlinedButton.icon(
                         onPressed: () {
                           context.read<ChallengeProvider>().reset();
+                          context.read<MindTimerProvider>().reset();
                           if (isCompetition) {
                             Navigator.pop(context);
                           } else {
@@ -227,7 +246,7 @@ class _ResultScreenState extends State<ResultScreen> {
                           }
                         },
                         icon: Icon(isCompetition ? Icons.arrow_back : Icons.home),
-                        label: Text(isCompetition ? 'Back to Competition' : l10n.home,
+                        label: Text(isCompetition ? l10n.backToCompetition : l10n.home,
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.white, side: const BorderSide(color: Colors.white54, width: 2),
