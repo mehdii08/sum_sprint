@@ -29,6 +29,7 @@ class _GameScreenState extends State<GameScreen>
   late AnimationController _wrongAnimController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _shakeAnimation;
+  bool _started = false;
 
   @override
   void initState() {
@@ -55,11 +56,12 @@ class _GameScreenState extends State<GameScreen>
       TweenSequenceItem(tween: Tween(begin: -10, end: 10), weight: 1),
       TweenSequenceItem(tween: Tween(begin: 10, end: 0), weight: 1),
     ]).animate(_wrongAnimController);
+  }
 
+  void _onStart() {
+    setState(() => _started = true);
     final cp = context.read<ChallengeProvider>();
-    Timer.run(() {
-      cp.startChallenge(widget.challenge);
-    });
+    cp.startChallenge(widget.challenge);
   }
 
   @override
@@ -80,6 +82,11 @@ class _GameScreenState extends State<GameScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+
+    // Before the challenge starts, show the "How to Play" instructions.
+    if (!_started) {
+      return _buildInstructionView(l10n);
+    }
 
     return PopScope(
       canPop: false,
@@ -333,6 +340,148 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
+  Widget _buildInstructionView(AppLocalizations l10n) {
+    final challenge = widget.challenge;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(challenge.name),
+        backgroundColor: const Color(0xFF1A237E),
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              const SizedBox(height: 8),
+              // Header icon
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF6F00).withAlpha(25),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.calculate,
+                  size: 40,
+                  color: Color(0xFFFF6F00),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Challenge title
+              Text(
+                challenge.name,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1A237E),
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Description
+              Text(
+                challenge.description,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 28),
+              // "How to Play" section
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.info_outline,
+                            color: Color(0xFF1A237E), size: 22),
+                        const SizedBox(width: 8),
+                        Text(
+                          l10n.challengeHowToPlay,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1A237E),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _InstructionRow(
+                      icon: Icons.looks_one,
+                      text: l10n.challengeRuleAdd,
+                    ),
+                    const SizedBox(height: 12),
+                    _InstructionRow(
+                      icon: Icons.touch_app,
+                      text: l10n.challengeRuleAnswer,
+                    ),
+                    const SizedBox(height: 12),
+                    _InstructionRow(
+                      icon: Icons.timer,
+                      text: l10n.challengeRuleTimer(
+                          challenge.timePerQuestionSeconds),
+                    ),
+                    const SizedBox(height: 12),
+                    _InstructionRow(
+                      icon: Icons.quiz,
+                      text: l10n
+                          .challengeRuleQuestions(challenge.questionCount),
+                    ),
+                    const SizedBox(height: 12),
+                    _InstructionRow(
+                      icon: Icons.star,
+                      text: l10n.challengeRuleScore,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+              // Start button
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton.icon(
+                  onPressed: _onStart,
+                  icon: const Icon(Icons.play_arrow, size: 28),
+                  label: Text(
+                    l10n.challengeStart,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF6F00),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 4,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showExitConfirmation(AppLocalizations l10n) {
     showDialog(
       context: context,
@@ -390,6 +539,34 @@ class _GameScreenState extends State<GameScreen>
         ),
       );
     }
+  }
+}
+
+class _InstructionRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _InstructionRow({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: const Color(0xFF1A237E)),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 15,
+              color: Color(0xFF1A237E),
+              height: 1.4,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 

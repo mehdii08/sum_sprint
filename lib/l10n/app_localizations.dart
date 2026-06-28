@@ -158,6 +158,14 @@ class AppLocalizations {
     'signInSignUp': 'Sign In / Sign Up',
     'nicknameOfflineHint': 'Nickname for offline play',
     'connectingTelegram': 'Connecting to Telegram',
+    // ── Challenge instruction overlay ────────────────────────────
+    'challengeHowToPlay': 'How to Play',
+    'challengeRuleAdd': 'Two numbers will appear on screen.',
+    'challengeRuleAnswer': 'Add them together and tap the correct answer.',
+    'challengeRuleTimer': 'You have {seconds} seconds per question — answer quickly!',
+    'challengeRuleQuestions': 'There are {count} questions in total.',
+    'challengeRuleScore': 'Faster correct answers earn more points.',
+    'challengeStart': 'Start',
   };
 
   // ── getters and parameterized methods ──
@@ -288,6 +296,15 @@ class AppLocalizations {
   String get signInSignUp => _get('signInSignUp');
   String get nicknameOfflineHint => _get('nicknameOfflineHint');
   String get connectingTelegram => _get('connectingTelegram');
+
+  // ── Challenge instruction overlay ─────────────────────────────────
+  String get challengeHowToPlay => _get('challengeHowToPlay');
+  String get challengeRuleAdd => _get('challengeRuleAdd');
+  String get challengeRuleAnswer => _get('challengeRuleAnswer');
+  String challengeRuleTimer(Object seconds) => 'You have $seconds seconds per question — answer quickly!';
+  String challengeRuleQuestions(Object count) => 'There are $count questions in total.';
+  String get challengeRuleScore => _get('challengeRuleScore');
+  String get challengeStart => _get('challengeStart');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
