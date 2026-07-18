@@ -267,13 +267,24 @@ class _CompetitionFormState extends State<_CompetitionForm> {
     final challenges = _challenges.map((fc) {
       final isMindTimer = fc.type == 'mind_timer';
       final isPairHunt = fc.type == 'pair_hunt';
+      final isTicTacToe = fc.type == 'tic_tac_toe';
       return {
         'id': fc.id,
         'name': fc.name,
         'description': fc.name,
-        'operation': isMindTimer ? 'mind_timer' : isPairHunt ? 'pair_hunt' : '+',
+        'operation': isMindTimer
+            ? 'mind_timer'
+            : isPairHunt
+                ? 'pair_hunt'
+                : isTicTacToe
+                    ? 'tic_tac_toe'
+                    : '+',
         'challengeType': fc.type,
-        'questionCount': isPairHunt ? 0 : fc.qCount,
+        'questionCount': isPairHunt
+            ? 0
+            : isTicTacToe
+                ? 3
+                : fc.qCount,
         if (isMindTimer) ...{
           'targetSeconds': fc.targetSeconds,
           'rangeSeconds': fc.rangeSeconds,
@@ -284,6 +295,9 @@ class _CompetitionFormState extends State<_CompetitionForm> {
           'pointsPerPair': fc.pointsPerPair,
           'maxTimeBonus': fc.maxTimeBonus,
           'penaltyPerMismatch': fc.penaltyPerMismatch,
+        } else if (isTicTacToe) ...{
+          'timeLimitSeconds': fc.timeLimitSeconds,
+          'maxPoints': fc.maxPoints,
         } else ...{
           'minNumber': fc.min,
           'maxNumber': fc.max,
@@ -498,6 +512,7 @@ class _CompetitionFormState extends State<_CompetitionForm> {
               final fc = e.value;
               final isMindTimer = fc.type == 'mind_timer';
               final isPairHunt = fc.type == 'pair_hunt';
+              final isTicTacToe = fc.type == 'tic_tac_toe';
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 shape: RoundedRectangleBorder(
@@ -513,27 +528,33 @@ class _CompetitionFormState extends State<_CompetitionForm> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: isPairHunt
-                                  ? Colors.purple.withAlpha(25)
-                                  : isMindTimer
-                                      ? Colors.indigo.withAlpha(25)
-                                      : Colors.orange.withAlpha(25),
+                              color: isTicTacToe
+                                  ? Colors.teal.withAlpha(25)
+                                  : isPairHunt
+                                      ? Colors.purple.withAlpha(25)
+                                      : isMindTimer
+                                          ? Colors.indigo.withAlpha(25)
+                                          : Colors.orange.withAlpha(25),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              isPairHunt
-                                  ? l10n.adminTypePairHunt
-                                  : isMindTimer
-                                      ? l10n.adminTypeMindTimer
-                                      : l10n.adminTypeMath,
+                              isTicTacToe
+                                  ? l10n.adminTypeTicTacToe
+                                  : isPairHunt
+                                      ? l10n.adminTypePairHunt
+                                      : isMindTimer
+                                          ? l10n.adminTypeMindTimer
+                                          : l10n.adminTypeMath,
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: isPairHunt
-                                    ? Colors.purple
-                                    : isMindTimer
-                                        ? Colors.indigo
-                                        : Colors.orange,
+                                color: isTicTacToe
+                                    ? Colors.teal
+                                    : isPairHunt
+                                        ? Colors.purple
+                                        : isMindTimer
+                                            ? Colors.indigo
+                                            : Colors.orange,
                               ),
                             ),
                           ),
@@ -579,7 +600,37 @@ class _CompetitionFormState extends State<_CompetitionForm> {
                       ),
                       const SizedBox(height: 10),
                       // Type-specific fields
-                      if (isPairHunt) ...[
+                      if (isTicTacToe) ...[
+                        // Time per round & Max Points
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _NumericField(
+                                label: l10n.adminTimePerRound,
+                                icon: Icons.timer,
+                                value: fc.timeLimitSeconds,
+                                step: 5,
+                                min: 5,
+                                max: 300,
+                                compact: true,
+                                onChanged: (v) => setState(() => fc.timeLimitSeconds = v),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _NumericField(
+                                label: l10n.adminMaxPoints,
+                                value: fc.maxPoints,
+                                step: 100,
+                                min: 100,
+                                max: 10000,
+                                compact: true,
+                                onChanged: (v) => setState(() => fc.maxPoints = v),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ] else if (isPairHunt) ...[
                         // Block Count dropdown
                         Row(
                           children: [
@@ -867,6 +918,31 @@ class _CompetitionFormState extends State<_CompetitionForm> {
               ],
             ),
           ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(ctx, 'tic_tac_toe'),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.teal.withAlpha(25),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.grid_3x3, color: Colors.teal),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l10n.adminTypeTicTacToe,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(l10n.adminTypeTicTacToeDesc,
+                        style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -1012,7 +1088,7 @@ int _challengeIdCounter = 0;
 class _ChallengeField {
   final String id;
   String name = '';
-  String type; // 'math', 'mind_timer', or 'pair_hunt'
+  String type; // 'math', 'mind_timer', 'pair_hunt', or 'tic_tac_toe'
 
   // Math fields
   int min = 1;
@@ -1031,6 +1107,8 @@ class _ChallengeField {
   int maxTimeBonus = 500;
   int penaltyPerMismatch = 25;
 
+  // Tic Tac Toe reuses timeLimitSeconds (per round) + maxPoints (per round)
+
   // Common
   int qCount = 10;
 
@@ -1042,16 +1120,23 @@ class _ChallengeField {
     if (type == 'pair_hunt') {
       qCount = 0;
     }
+    if (type == 'tic_tac_toe') {
+      qCount = 3;
+      timeLimitSeconds = 30;
+      maxPoints = 1000;
+    }
   }
 
   _ChallengeField.fromChallenge(ChallengeDefinition ch)
       : id = ch.id,
         name = ch.name,
-        type = ch.isPairHunt
-            ? 'pair_hunt'
-            : ch.isMindTimer
-                ? 'mind_timer'
-                : 'math',
+        type = ch.isTicTacToe
+            ? 'tic_tac_toe'
+            : ch.isPairHunt
+                ? 'pair_hunt'
+                : ch.isMindTimer
+                    ? 'mind_timer'
+                    : 'math',
         min = ch.minNumber,
         max = ch.maxNumber,
         time = ch.timePerQuestionSeconds,

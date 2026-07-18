@@ -190,7 +190,30 @@ class _HistoryCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      if (result.isPairHunt)
+                      if (result.isTicTacToe)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: result.roundsWon >= result.totalRounds &&
+                                    result.totalRounds > 0
+                                ? Colors.green.shade50
+                                : Colors.orange.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            l10n.ticTacToeWins(
+                                result.roundsWon, result.totalRounds),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: result.roundsWon >= result.totalRounds &&
+                                      result.totalRounds > 0
+                                  ? Colors.green.shade700
+                                  : Colors.orange.shade700,
+                            ),
+                          ),
+                        )
+                      else if (result.isPairHunt)
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 2),
@@ -249,7 +272,7 @@ class _HistoryCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  result.isPairHunt
+                  result.isPairHunt || result.isTicTacToe
                       ? '${(result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s'
                       : '${result.averageTimeSeconds.toStringAsFixed(1)}s',
                   style: TextStyle(
@@ -259,7 +282,9 @@ class _HistoryCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  result.isPairHunt ? l10n.pairHuntTimeTakenStat : l10n.avg,
+                  result.isPairHunt || result.isTicTacToe
+                      ? l10n.pairHuntTimeTakenStat
+                      : l10n.avg,
                   style: TextStyle(
                     fontSize: 11,
                     color: Colors.grey.shade400,

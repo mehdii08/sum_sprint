@@ -9,6 +9,7 @@ import 'providers/auth_provider.dart';
 import 'providers/competition_provider.dart';
 import 'providers/mind_timer_provider.dart';
 import 'providers/pair_hunt_provider.dart';
+import 'providers/tic_tac_toe_provider.dart';
 import 'screens/splash_screen.dart';
 import 'l10n/app_localizations.dart';
 
@@ -39,6 +40,7 @@ class SumSprintApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CompetitionProvider()),
         ChangeNotifierProvider(create: (_) => MindTimerProvider()),
         ChangeNotifierProvider(create: (_) => PairHuntProvider()),
+        ChangeNotifierProvider(create: (_) => TicTacToeProvider()),
       ],
       child: MaterialApp(
         title: 'Sum Sprint',

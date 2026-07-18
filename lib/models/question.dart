@@ -130,3 +130,66 @@ class PairHuntGameResult {
     required this.timeLimitSeconds,
   });
 }
+
+// ── Tic Tac Toe models ────────────────────────────────────────────
+
+/// The mark in a single Tic‑Tac‑Toe cell.
+enum TicTacToeMark { none, player, ai }
+
+/// AI difficulty for a Tic‑Tac‑Toe round.
+///
+/// Rounds progress: round 1 = easy, round 2 = medium, round 3 = hard.
+enum TicTacToeDifficulty {
+  easy('easy'),
+  medium('medium'),
+  hard('hard');
+
+  final String value;
+  const TicTacToeDifficulty(this.value);
+}
+
+/// How a single Tic‑Tac‑Toe round ended.
+enum TicTacToeRoundOutcome {
+  win,     // player got three in a row
+  loss,    // AI got three in a row
+  draw,    // board full, nobody won
+  timeout, // round timer ran out (counted as a draw, 0 points)
+}
+
+/// Per‑round result of a Tic‑Tac‑Toe challenge.
+class TicTacToeRoundResult {
+  /// 1-based round number (1–3).
+  final int roundNumber;
+
+  /// Difficulty the AI played at during this round.
+  final TicTacToeDifficulty difficulty;
+
+  /// How the round ended.
+  final TicTacToeRoundOutcome outcome;
+
+  /// Points earned for this round (0 unless the player won).
+  final int score;
+
+  /// Time remaining when the round ended, in milliseconds.
+  final int remainingMs;
+
+  /// The configured round time limit, in milliseconds.
+  final int timeLimitMs;
+
+  bool get isWin => outcome == TicTacToeRoundOutcome.win;
+  bool get isDraw =>
+      outcome == TicTacToeRoundOutcome.draw ||
+      outcome == TicTacToeRoundOutcome.timeout;
+
+  /// Time actually spent in this round, in milliseconds.
+  int get elapsedMs => timeLimitMs - remainingMs;
+
+  const TicTacToeRoundResult({
+    required this.roundNumber,
+    required this.difficulty,
+    required this.outcome,
+    required this.score,
+    required this.remainingMs,
+    required this.timeLimitMs,
+  });
+}

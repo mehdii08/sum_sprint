@@ -33,5 +33,15 @@
     "maxTimeBonus": 500,
     "penaltyPerMismatch": 25,
     "questionCount": 0
+  },
+  {
+    "id": "tic_tac_toe_classic",
+    "name": "Tic‑Tac‑Toe – Classic",
+    "description": "Beat the AI in 3 rounds: Easy, Medium, Hard. Win fast for more points!",
+    "operation": "tic_tac_toe",
+    "challengeType": "tic_tac_toe",
+    "timeLimitSeconds": 30,
+    "maxPoints": 1000,
+    "questionCount": 3
   }
 ]

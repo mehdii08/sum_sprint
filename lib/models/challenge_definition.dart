@@ -6,10 +6,12 @@ import 'dart:convert';
 /// - `'math'` → arithmetic questions (addition, subtraction, etc.)
 /// - `'mind_timer'` → internal clock challenge (stop hidden timer at target)
 /// - `'pair_hunt'` → memory card matching game (find emoji pairs)
+/// - `'tic_tac_toe'` → 3 rounds of Tic‑Tac‑Toe vs the AI (Easy → Medium → Hard)
 enum ChallengeType {
   math('math'),
   mindTimer('mind_timer'),
-  pairHunt('pair_hunt');
+  pairHunt('pair_hunt'),
+  ticTacToe('tic_tac_toe');
 
   final String value;
   const ChallengeType(this.value);
@@ -50,6 +52,11 @@ class ChallengeDefinition {
   final int maxTimeBonus;        // max bonus for finishing early (default 500)
   final int penaltyPerMismatch;  // penalty for each wrong attempt (default 25)
 
+  // ── Tic‑Tac‑Toe reuses existing fields ──────────────────────────
+  // - [timeLimitSeconds] → time limit for each match (round)
+  // - [maxPoints]        → max score per round (final = average of rounds)
+  // - [questionCount]    → number of rounds (always 3: Easy → Medium → Hard)
+
   const ChallengeDefinition({
     required this.id,
     required this.name,
@@ -76,6 +83,7 @@ class ChallengeDefinition {
   bool get isMindTimer => challengeType == ChallengeType.mindTimer;
   bool get isMath => challengeType == ChallengeType.math;
   bool get isPairHunt => challengeType == ChallengeType.pairHunt;
+  bool get isTicTacToe => challengeType == ChallengeType.ticTacToe;
 
   /// Number of pairs in a Pair Hunt challenge (blocks / 2).
   int get pairCount => blockCount ~/ 2;
@@ -83,7 +91,13 @@ class ChallengeDefinition {
   factory ChallengeDefinition.fromJson(Map<String, dynamic> json) {
     final op = json['operation'] as String?;
     final type = (json['challengeType'] as String?) ??
-        (op == 'mind_timer' ? 'mind_timer' : op == 'pair_hunt' ? 'pair_hunt' : 'math');
+        (op == 'mind_timer'
+            ? 'mind_timer'
+            : op == 'pair_hunt'
+                ? 'pair_hunt'
+                : op == 'tic_tac_toe'
+                    ? 'tic_tac_toe'
+                    : 'math');
     return ChallengeDefinition(
       id: json['id'] as String,
       name: json['name'] as String,

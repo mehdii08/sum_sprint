@@ -195,6 +195,38 @@ class AppLocalizations {
     'adminPointsPerPair': 'Points/Pair',
     'adminMaxTimeBonus': 'Max Time Bonus',
     'adminPenaltyPerMismatch': 'Penalty/Mismatch',
+
+    // ── Tic Tac Toe ─────────────────────────────────────────────
+    'ticTacToeRounds': 'Rounds',
+    'ticTacToeRoundsValue': '3 (Easy → Medium → Hard)',
+    'ticTacToeTimePerRound': 'Time per Round',
+    'ticTacToeMaxPoints': 'Max Points',
+    'ticTacToeHowToPlay': 'How to Play',
+    'ticTacToeRule1': 'You are X and always move first. Tap any empty cell.',
+    'ticTacToeRule2': 'The AI answers with O. Get three in a row to win!',
+    'ticTacToeRule3': 'You play 3 rounds — the AI gets smarter each round: Easy, Medium, Hard.',
+    'ticTacToeRule4': 'Win within {seconds} seconds — the faster you win, the more points you earn. Draws and losses score 0.',
+    'ticTacToeRule5': 'Your final score is the average of the 3 rounds.',
+    'ticTacToeStart': 'Start',
+    'ticTacToeYourTurn': 'Your turn — you are X',
+    'ticTacToeAiThinking': 'AI is thinking…',
+    'ticTacToeYouWin': 'You Win!',
+    'ticTacToeYouLose': 'You Lose',
+    'ticTacToeDraw': 'Draw',
+    'ticTacToeTimeUp': "Time's Up!",
+    'ticTacToeNextRound': 'Next round starting…',
+    'ticTacToeAllRoundsDone': 'Calculating final score…',
+    'ticTacToeNoPoints': 'No points this round',
+    'ticTacToeDifficultyEasy': 'Easy',
+    'ticTacToeDifficultyMedium': 'Medium',
+    'ticTacToeDifficultyHard': 'Hard',
+    'ticTacToeWinsStat': 'Wins',
+    'ticTacToeDrawsStat': 'Draws',
+    'ticTacToeTimeStat': 'Total Time',
+    // ── Admin Tic Tac Toe ───────────────────────────────────────
+    'adminTypeTicTacToe': 'Tic‑Tac‑Toe',
+    'adminTypeTicTacToeDesc': 'Beat the AI in 3 rounds (Easy → Medium → Hard)',
+    'adminTimePerRound': 'Time/Round (s)',
   };
 
   // ── getters and parameterized methods ──
@@ -365,6 +397,44 @@ class AppLocalizations {
   String get adminPointsPerPair => _get('adminPointsPerPair');
   String get adminMaxTimeBonus => _get('adminMaxTimeBonus');
   String get adminPenaltyPerMismatch => _get('adminPenaltyPerMismatch');
+
+  // ── Tic Tac Toe ────────────────────────────────────────────────────
+  String get ticTacToeRounds => _get('ticTacToeRounds');
+  String get ticTacToeRoundsValue => _get('ticTacToeRoundsValue');
+  String get ticTacToeTimePerRound => _get('ticTacToeTimePerRound');
+  String get ticTacToeMaxPoints => _get('ticTacToeMaxPoints');
+  String get ticTacToeHowToPlay => _get('ticTacToeHowToPlay');
+  String get ticTacToeRule1 => _get('ticTacToeRule1');
+  String get ticTacToeRule2 => _get('ticTacToeRule2');
+  String get ticTacToeRule3 => _get('ticTacToeRule3');
+  String ticTacToeRule4(Object seconds) =>
+      'Win within $seconds seconds — the faster you win, the more points you earn. Draws and losses score 0.';
+  String get ticTacToeRule5 => _get('ticTacToeRule5');
+  String get ticTacToeStart => _get('ticTacToeStart');
+  String get ticTacToeYourTurn => _get('ticTacToeYourTurn');
+  String get ticTacToeAiThinking => _get('ticTacToeAiThinking');
+  String get ticTacToeYouWin => _get('ticTacToeYouWin');
+  String get ticTacToeYouLose => _get('ticTacToeYouLose');
+  String get ticTacToeDraw => _get('ticTacToeDraw');
+  String get ticTacToeTimeUp => _get('ticTacToeTimeUp');
+  String get ticTacToeNextRound => _get('ticTacToeNextRound');
+  String get ticTacToeAllRoundsDone => _get('ticTacToeAllRoundsDone');
+  String get ticTacToeNoPoints => _get('ticTacToeNoPoints');
+  String get ticTacToeDifficultyEasy => _get('ticTacToeDifficultyEasy');
+  String get ticTacToeDifficultyMedium => _get('ticTacToeDifficultyMedium');
+  String get ticTacToeDifficultyHard => _get('ticTacToeDifficultyHard');
+  String get ticTacToeWinsStat => _get('ticTacToeWinsStat');
+  String get ticTacToeDrawsStat => _get('ticTacToeDrawsStat');
+  String get ticTacToeTimeStat => _get('ticTacToeTimeStat');
+  String ticTacToeRound(Object round, Object total) => 'Round $round/$total';
+  String ticTacToeTimeRemaining(Object seconds) => '${seconds}s remaining';
+  String ticTacToeRoundPoints(Object points) => '+$points points';
+  String ticTacToeWins(Object won, Object total) => '$won/$total wins';
+
+  // ── Admin Tic Tac Toe ──────────────────────────────────────────────
+  String get adminTypeTicTacToe => _get('adminTypeTicTacToe');
+  String get adminTypeTicTacToeDesc => _get('adminTypeTicTacToeDesc');
+  String get adminTimePerRound => _get('adminTimePerRound');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

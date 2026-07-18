@@ -10,6 +10,7 @@ import '../providers/competition_provider.dart';
 import 'game_screen.dart';
 import 'mind_timer_game_screen.dart';
 import 'pair_hunt_game_screen.dart';
+import 'tic_tac_toe_game_screen.dart';
 import 'result_screen.dart';
 
 /// Detail view for a single competition.
@@ -267,6 +268,12 @@ class _CompetitionDetailScreenState extends State<CompetitionDetailScreen>
       context,
       MaterialPageRoute(
         builder: (_) {
+          if (challenge.isTicTacToe) {
+            return TicTacToeGameScreen(
+              challenge: challenge,
+              competitionId: widget.competition.id,
+            );
+          }
           if (challenge.isPairHunt) {
             return PairHuntGameScreen(
               challenge: challenge,
@@ -627,11 +634,13 @@ class _CompetitionDetailScreenState extends State<CompetitionDetailScreen>
                     child: Icon(
                       isPlayed
                           ? Icons.check_circle
-                          : challenge.isPairHunt
-                              ? Icons.grid_view
-                              : challenge.isMindTimer
-                                  ? Icons.timer
-                                  : Icons.calculate,
+                          : challenge.isTicTacToe
+                              ? Icons.grid_3x3
+                              : challenge.isPairHunt
+                                  ? Icons.grid_view
+                                  : challenge.isMindTimer
+                                      ? Icons.timer
+                                      : Icons.calculate,
                       color: isPlayed ? Colors.green : const Color(0xFFFF6F00),
                       size: 24,
                     ),

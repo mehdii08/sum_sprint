@@ -30,6 +30,18 @@ class Result {
   /// Number of mismatches (Pair‑Hunt only).
   final int mismatchCount;
 
+  /// Whether this result is for a Tic‑Tac‑Toe challenge.
+  final bool isTicTacToe;
+
+  /// Number of rounds the player won (Tic‑Tac‑Toe only).
+  final int roundsWon;
+
+  /// Number of rounds that ended in a draw/timeout (Tic‑Tac‑Toe only).
+  final int roundsDrawn;
+
+  /// Total number of rounds played (Tic‑Tac‑Toe only).
+  final int totalRounds;
+
   Result({
     required this.challengeId,
     required this.score,
@@ -44,6 +56,10 @@ class Result {
     this.pairsFound = 0,
     this.totalPairs = 0,
     this.mismatchCount = 0,
+    this.isTicTacToe = false,
+    this.roundsWon = 0,
+    this.roundsDrawn = 0,
+    this.totalRounds = 0,
   });
 
   factory Result.fromJson(Map<String, dynamic> json) {
@@ -61,6 +77,10 @@ class Result {
       pairsFound: json['pairsFound'] as int? ?? 0,
       totalPairs: json['totalPairs'] as int? ?? 0,
       mismatchCount: json['mismatchCount'] as int? ?? 0,
+      isTicTacToe: json['isTicTacToe'] as bool? ?? false,
+      roundsWon: json['roundsWon'] as int? ?? 0,
+      roundsDrawn: json['roundsDrawn'] as int? ?? 0,
+      totalRounds: json['totalRounds'] as int? ?? 0,
     );
   }
 
@@ -78,6 +98,10 @@ class Result {
         'pairsFound': pairsFound,
         'totalPairs': totalPairs,
         'mismatchCount': mismatchCount,
+        'isTicTacToe': isTicTacToe,
+        'roundsWon': roundsWon,
+        'roundsDrawn': roundsDrawn,
+        'totalRounds': totalRounds,
       };
 
   double get averageTimeSeconds =>

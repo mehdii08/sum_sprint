@@ -7,6 +7,7 @@ import '../l10n/app_localizations.dart';
 import 'game_screen.dart';
 import 'mind_timer_game_screen.dart';
 import 'pair_hunt_game_screen.dart';
+import 'tic_tac_toe_game_screen.dart';
 import 'history_screen.dart';
 
 class ChallengeListScreen extends StatelessWidget {
@@ -69,6 +70,9 @@ class _ChallengeCard extends StatelessWidget {
   const _ChallengeCard({required this.challenge, required this.l10n});
 
   Color _getDifficultyColor() {
+    if (challenge.isTicTacToe) {
+      return Colors.teal;
+    }
     if (challenge.isPairHunt) {
       switch (challenge.id) {
         case 'pair_hunt_easy':
@@ -106,6 +110,7 @@ class _ChallengeCard extends StatelessWidget {
   }
 
   IconData _getDifficultyIcon() {
+    if (challenge.isTicTacToe) return Icons.grid_3x3;
     if (challenge.isPairHunt) return Icons.grid_view;
     if (challenge.isMindTimer) return Icons.timer;
     return Icons.calculate;
@@ -231,6 +236,9 @@ class _ChallengeCard extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (_) {
+                            if (challenge.isTicTacToe) {
+                              return TicTacToeGameScreen(challenge: challenge);
+                            }
                             if (challenge.isPairHunt) {
                               return PairHuntGameScreen(challenge: challenge);
                             }
@@ -242,11 +250,13 @@ class _ChallengeCard extends StatelessWidget {
                         ),
                       );
                     },
-                    icon: Icon(challenge.isPairHunt
-                        ? Icons.grid_view
-                        : challenge.isMindTimer
-                            ? Icons.timer
-                            : Icons.play_arrow),
+                    icon: Icon(challenge.isTicTacToe
+                        ? Icons.grid_3x3
+                        : challenge.isPairHunt
+                            ? Icons.grid_view
+                            : challenge.isMindTimer
+                                ? Icons.timer
+                                : Icons.play_arrow),
                     label: Text(
                       l10n.play,
                       style: const TextStyle(

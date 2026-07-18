@@ -7,11 +7,13 @@ import '../providers/result_provider.dart';
 import '../providers/challenge_provider.dart';
 import '../providers/mind_timer_provider.dart';
 import '../providers/pair_hunt_provider.dart';
+import '../providers/tic_tac_toe_provider.dart';
 import '../providers/competition_provider.dart';
 import '../l10n/app_localizations.dart';
 import 'game_screen.dart';
 import 'mind_timer_game_screen.dart';
 import 'pair_hunt_game_screen.dart';
+import 'tic_tac_toe_game_screen.dart';
 import 'home_screen.dart';
 
 class ResultScreen extends StatefulWidget {
@@ -102,21 +104,31 @@ class _ResultScreenState extends State<ResultScreen> {
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        widget.result.isPairHunt
-                            ? (widget.result.pairsFound >= widget.result.totalPairs
+                        widget.result.isTicTacToe
+                            ? (widget.result.roundsWon >= widget.result.totalRounds &&
+                                    widget.result.totalRounds > 0
                                 ? Icons.emoji_events
-                                : Icons.grid_view)
-                            : widget.result.correctCount == widget.challenge.questionCount
-                                ? Icons.emoji_events
-                                : Icons.workspace_premium,
+                                : Icons.grid_3x3)
+                            : widget.result.isPairHunt
+                                ? (widget.result.pairsFound >= widget.result.totalPairs
+                                    ? Icons.emoji_events
+                                    : Icons.grid_view)
+                                : widget.result.correctCount == widget.challenge.questionCount
+                                    ? Icons.emoji_events
+                                    : Icons.workspace_premium,
                         size: 72,
-                        color: widget.result.isPairHunt
-                            ? (widget.result.pairsFound >= widget.result.totalPairs
+                        color: widget.result.isTicTacToe
+                            ? (widget.result.roundsWon >= widget.result.totalRounds &&
+                                    widget.result.totalRounds > 0
                                 ? Colors.amber
                                 : Colors.white70)
-                            : widget.result.correctCount == widget.challenge.questionCount
-                                ? Colors.amber
-                                : Colors.white70,
+                            : widget.result.isPairHunt
+                                ? (widget.result.pairsFound >= widget.result.totalPairs
+                                    ? Colors.amber
+                                    : Colors.white70)
+                                : widget.result.correctCount == widget.challenge.questionCount
+                                    ? Colors.amber
+                                    : Colors.white70,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -166,7 +178,16 @@ class _ResultScreenState extends State<ResultScreen> {
                           const Divider(height: 32),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: widget.result.isPairHunt
+                            children: widget.result.isTicTacToe
+                                ? [
+                                    _StatItem(icon: Icons.emoji_events, color: Colors.green,
+                                        value: '${widget.result.roundsWon}/${widget.result.totalRounds}', label: l10n.ticTacToeWinsStat),
+                                    _StatItem(icon: Icons.handshake, color: Colors.orange,
+                                        value: '${widget.result.roundsDrawn}', label: l10n.ticTacToeDrawsStat),
+                                    _StatItem(icon: Icons.timer, color: Colors.purple,
+                                        value: '${(widget.result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s', label: l10n.ticTacToeTimeStat),
+                                  ]
+                                : widget.result.isPairHunt
                                 ? [
                                     _StatItem(icon: Icons.grid_view, color: Colors.green,
                                         value: '${widget.result.pairsFound}/${widget.result.totalPairs}', label: l10n.pairHuntPairsFoundStat),
@@ -229,7 +250,11 @@ class _ResultScreenState extends State<ResultScreen> {
                         width: double.infinity, height: 56,
                         child: ElevatedButton.icon(
                           onPressed: () {
-                            if (widget.challenge.isPairHunt) {
+                            if (widget.challenge.isTicTacToe) {
+                              context.read<TicTacToeProvider>().reset();
+                              Navigator.pushReplacement(context,
+                                  MaterialPageRoute(builder: (_) => TicTacToeGameScreen(challenge: widget.challenge, competitionId: widget.competitionId)));
+                            } else if (widget.challenge.isPairHunt) {
                               context.read<PairHuntProvider>().reset();
                               Navigator.pushReplacement(context,
                                   MaterialPageRoute(builder: (_) => PairHuntGameScreen(challenge: widget.challenge, competitionId: widget.competitionId)));
@@ -262,6 +287,7 @@ class _ResultScreenState extends State<ResultScreen> {
                           context.read<ChallengeProvider>().reset();
                           context.read<MindTimerProvider>().reset();
                           context.read<PairHuntProvider>().reset();
+                          context.read<TicTacToeProvider>().reset();
                           if (isCompetition) {
                             Navigator.pop(context);
                           } else {
