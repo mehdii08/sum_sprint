@@ -354,7 +354,7 @@ class _GameScreenState extends State<GameScreen>
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
           child: Column(
             children: [
               const SizedBox(height: 8),
@@ -449,33 +449,36 @@ class _GameScreenState extends State<GameScreen>
                   ],
                 ),
               ),
-              const SizedBox(height: 32),
-              // Start button
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton.icon(
-                  onPressed: _onStart,
-                  icon: const Icon(Icons.play_arrow, size: 28),
-                  label: Text(
-                    l10n.challengeStart,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF6F00),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 4,
-                  ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+          child: SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton.icon(
+              onPressed: _onStart,
+              icon: const Icon(Icons.play_arrow, size: 28),
+              label: Text(
+                l10n.challengeStart,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 16),
-            ],
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF6F00),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 4,
+              ),
+            ),
           ),
         ),
       ),

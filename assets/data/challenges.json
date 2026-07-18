@@ -1,16 +1,5 @@
 [
   {
-    "id": "easy_add",
-    "name": "Easy Addition",
-    "description": "Numbers 1-10, 5 seconds per question.",
-    "operation": "+",
-    "challengeType": "math",
-    "minNumber": 1,
-    "maxNumber": 10,
-    "timePerQuestionSeconds": 5,
-    "questionCount": 10
-  },
-  {
     "id": "medium_add",
     "name": "Medium Addition",
     "description": "Numbers 5-20, 4 seconds per question.",
@@ -20,28 +9,6 @@
     "maxNumber": 20,
     "timePerQuestionSeconds": 4,
     "questionCount": 10
-  },
-  {
-    "id": "hard_mix",
-    "name": "Hard Mix",
-    "description": "Numbers 10-50, 3 seconds per question.",
-    "operation": "+",
-    "challengeType": "math",
-    "minNumber": 10,
-    "maxNumber": 50,
-    "timePerQuestionSeconds": 3,
-    "questionCount": 10
-  },
-  {
-    "id": "mind_timer_easy",
-    "name": "Mind Timer – Easy",
-    "description": "Stop at 5.00s, 2s range window for full points.",
-    "operation": "mind_timer",
-    "challengeType": "mind_timer",
-    "targetSeconds": 5.0,
-    "rangeSeconds": 2.0,
-    "maxPoints": 1000,
-    "questionCount": 5
   },
   {
     "id": "mind_timer_medium",
@@ -55,14 +22,16 @@
     "questionCount": 5
   },
   {
-    "id": "mind_timer_hard",
-    "name": "Mind Timer – Hard",
-    "description": "Stop at 15.00s, 1.0s range window for full points.",
-    "operation": "mind_timer",
-    "challengeType": "mind_timer",
-    "targetSeconds": 15.0,
-    "rangeSeconds": 1.0,
-    "maxPoints": 1000,
-    "questionCount": 5
+    "id": "pair_hunt_medium",
+    "name": "Pair Hunt – Medium",
+    "description": "12 blocks (6 pairs), 60 seconds. Test your memory!",
+    "operation": "pair_hunt",
+    "challengeType": "pair_hunt",
+    "blockCount": 12,
+    "timeLimitSeconds": 60,
+    "pointsPerPair": 100,
+    "maxTimeBonus": 500,
+    "penaltyPerMismatch": 25,
+    "questionCount": 0
   }
 ]

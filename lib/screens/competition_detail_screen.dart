@@ -9,6 +9,7 @@ import '../providers/auth_provider.dart';
 import '../providers/competition_provider.dart';
 import 'game_screen.dart';
 import 'mind_timer_game_screen.dart';
+import 'pair_hunt_game_screen.dart';
 import 'result_screen.dart';
 
 /// Detail view for a single competition.
@@ -265,15 +266,24 @@ class _CompetitionDetailScreenState extends State<CompetitionDetailScreen>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => challenge.isMindTimer
-            ? MindTimerGameScreen(
-                challenge: challenge,
-                competitionId: widget.competition.id,
-              )
-            : GameScreen(
-                challenge: challenge,
-                competitionId: widget.competition.id,
-              ),
+        builder: (_) {
+          if (challenge.isPairHunt) {
+            return PairHuntGameScreen(
+              challenge: challenge,
+              competitionId: widget.competition.id,
+            );
+          }
+          if (challenge.isMindTimer) {
+            return MindTimerGameScreen(
+              challenge: challenge,
+              competitionId: widget.competition.id,
+            );
+          }
+          return GameScreen(
+            challenge: challenge,
+            competitionId: widget.competition.id,
+          );
+        },
       ),
     ).then((gameResult) {
       // gameResult is null if the user quit early, otherwise it's
@@ -617,9 +627,11 @@ class _CompetitionDetailScreenState extends State<CompetitionDetailScreen>
                     child: Icon(
                       isPlayed
                           ? Icons.check_circle
-                          : challenge.isMindTimer
-                              ? Icons.timer
-                              : Icons.calculate,
+                          : challenge.isPairHunt
+                              ? Icons.grid_view
+                              : challenge.isMindTimer
+                                  ? Icons.timer
+                                  : Icons.calculate,
                       color: isPlayed ? Colors.green : const Color(0xFFFF6F00),
                       size: 24,
                     ),

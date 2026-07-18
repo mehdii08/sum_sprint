@@ -266,17 +266,24 @@ class _CompetitionFormState extends State<_CompetitionForm> {
     if (!_formKey.currentState!.validate()) return;
     final challenges = _challenges.map((fc) {
       final isMindTimer = fc.type == 'mind_timer';
+      final isPairHunt = fc.type == 'pair_hunt';
       return {
         'id': fc.id,
         'name': fc.name,
         'description': fc.name,
-        'operation': isMindTimer ? 'mind_timer' : '+',
+        'operation': isMindTimer ? 'mind_timer' : isPairHunt ? 'pair_hunt' : '+',
         'challengeType': fc.type,
-        'questionCount': fc.qCount,
+        'questionCount': isPairHunt ? 0 : fc.qCount,
         if (isMindTimer) ...{
           'targetSeconds': fc.targetSeconds,
           'rangeSeconds': fc.rangeSeconds,
           'maxPoints': fc.maxPoints,
+        } else if (isPairHunt) ...{
+          'blockCount': fc.blockCount,
+          'timeLimitSeconds': fc.timeLimitSeconds,
+          'pointsPerPair': fc.pointsPerPair,
+          'maxTimeBonus': fc.maxTimeBonus,
+          'penaltyPerMismatch': fc.penaltyPerMismatch,
         } else ...{
           'minNumber': fc.min,
           'maxNumber': fc.max,
@@ -490,6 +497,7 @@ class _CompetitionFormState extends State<_CompetitionForm> {
               final i = e.key;
               final fc = e.value;
               final isMindTimer = fc.type == 'mind_timer';
+              final isPairHunt = fc.type == 'pair_hunt';
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 shape: RoundedRectangleBorder(
@@ -505,17 +513,27 @@ class _CompetitionFormState extends State<_CompetitionForm> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: isMindTimer
-                                  ? Colors.indigo.withAlpha(25)
-                                  : Colors.orange.withAlpha(25),
+                              color: isPairHunt
+                                  ? Colors.purple.withAlpha(25)
+                                  : isMindTimer
+                                      ? Colors.indigo.withAlpha(25)
+                                      : Colors.orange.withAlpha(25),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              isMindTimer ? l10n.adminTypeMindTimer : l10n.adminTypeMath,
+                              isPairHunt
+                                  ? l10n.adminTypePairHunt
+                                  : isMindTimer
+                                      ? l10n.adminTypeMindTimer
+                                      : l10n.adminTypeMath,
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: isMindTimer ? Colors.indigo : Colors.orange,
+                                color: isPairHunt
+                                    ? Colors.purple
+                                    : isMindTimer
+                                        ? Colors.indigo
+                                        : Colors.orange,
                               ),
                             ),
                           ),
@@ -561,7 +579,82 @@ class _CompetitionFormState extends State<_CompetitionForm> {
                       ),
                       const SizedBox(height: 10),
                       // Type-specific fields
-                      if (isMindTimer) ...[
+                      if (isPairHunt) ...[
+                        // Block Count dropdown
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _NumericField(
+                                label: l10n.adminBlockCount,
+                                icon: Icons.grid_on,
+                                value: fc.blockCount,
+                                step: 4,
+                                min: 4,
+                                max: 20,
+                                compact: true,
+                                onChanged: (v) {
+                                  // Round to nearest even (4, 8, 12, 16, 20)
+                                  final rounded = ((v + 2) ~/ 4) * 4;
+                                  setState(() => fc.blockCount = rounded.clamp(4, 20));
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _NumericField(
+                                label: l10n.adminTimeS,
+                                value: fc.timeLimitSeconds,
+                                step: 15,
+                                min: 15,
+                                max: 600,
+                                compact: true,
+                                onChanged: (v) => setState(() => fc.timeLimitSeconds = v),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        // Points Per Pair & Max Time Bonus
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _NumericField(
+                                label: l10n.adminPointsPerPair,
+                                value: fc.pointsPerPair,
+                                step: 50,
+                                min: 10,
+                                max: 1000,
+                                compact: true,
+                                onChanged: (v) => setState(() => fc.pointsPerPair = v),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _NumericField(
+                                label: l10n.adminMaxTimeBonus,
+                                value: fc.maxTimeBonus,
+                                step: 100,
+                                min: 0,
+                                max: 5000,
+                                compact: true,
+                                onChanged: (v) => setState(() => fc.maxTimeBonus = v),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        // Penalty Per Mismatch
+                        _NumericField(
+                          label: l10n.adminPenaltyPerMismatch,
+                          icon: Icons.warning_amber,
+                          value: fc.penaltyPerMismatch,
+                          step: 5,
+                          min: 0,
+                          max: 500,
+                          compact: true,
+                          onChanged: (v) => setState(() => fc.penaltyPerMismatch = v),
+                        ),
+                      ] else if (isMindTimer) ...[
                         // Target Seconds, Range Seconds, Max Points
                         Row(
                           children: [
@@ -749,6 +842,31 @@ class _CompetitionFormState extends State<_CompetitionForm> {
               ],
             ),
           ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(ctx, 'pair_hunt'),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.withAlpha(25),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.grid_view, color: Colors.purple),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l10n.adminTypePairHunt,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(l10n.adminTypePairHuntDesc,
+                        style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -894,7 +1012,7 @@ int _challengeIdCounter = 0;
 class _ChallengeField {
   final String id;
   String name = '';
-  String type; // 'math' or 'mind_timer'
+  String type; // 'math', 'mind_timer', or 'pair_hunt'
 
   // Math fields
   int min = 1;
@@ -906,6 +1024,13 @@ class _ChallengeField {
   double rangeSeconds = 2.0;
   int maxPoints = 1000;
 
+  // Pair Hunt fields
+  int blockCount = 12;
+  int timeLimitSeconds = 60;
+  int pointsPerPair = 100;
+  int maxTimeBonus = 500;
+  int penaltyPerMismatch = 25;
+
   // Common
   int qCount = 10;
 
@@ -914,18 +1039,30 @@ class _ChallengeField {
       qCount = 5;
       maxPoints = 1000;
     }
+    if (type == 'pair_hunt') {
+      qCount = 0;
+    }
   }
 
   _ChallengeField.fromChallenge(ChallengeDefinition ch)
       : id = ch.id,
         name = ch.name,
-        type = ch.isMindTimer ? 'mind_timer' : 'math',
+        type = ch.isPairHunt
+            ? 'pair_hunt'
+            : ch.isMindTimer
+                ? 'mind_timer'
+                : 'math',
         min = ch.minNumber,
         max = ch.maxNumber,
         time = ch.timePerQuestionSeconds,
         targetSeconds = ch.targetSeconds,
         rangeSeconds = ch.rangeSeconds,
         maxPoints = ch.maxPoints,
+        blockCount = ch.blockCount,
+        timeLimitSeconds = ch.timeLimitSeconds,
+        pointsPerPair = ch.pointsPerPair,
+        maxTimeBonus = ch.maxTimeBonus,
+        penaltyPerMismatch = ch.penaltyPerMismatch,
         qCount = ch.questionCount;
 
   static String _generateId() {

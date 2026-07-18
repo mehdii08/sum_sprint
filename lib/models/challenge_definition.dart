@@ -5,9 +5,11 @@ import 'dart:convert';
 /// [challengeType] discriminates the challenge behavior:
 /// - `'math'` → arithmetic questions (addition, subtraction, etc.)
 /// - `'mind_timer'` → internal clock challenge (stop hidden timer at target)
+/// - `'pair_hunt'` → memory card matching game (find emoji pairs)
 enum ChallengeType {
   math('math'),
-  mindTimer('mind_timer');
+  mindTimer('mind_timer'),
+  pairHunt('pair_hunt');
 
   final String value;
   const ChallengeType(this.value);
@@ -41,6 +43,13 @@ class ChallengeDefinition {
   final double rangeSeconds;   // e.g. 2.0 → max allowed deviation either side
   final int maxPoints;         // points for a perfect stop
 
+  // ── Pair‑Hunt–specific fields (only meaningful when challengeType == pairHunt) ──
+  final int blockCount;          // total number of blocks, always even (4, 8, 12, 16, 20)
+  final int timeLimitSeconds;    // total time limit for the whole game
+  final int pointsPerPair;       // base points per matched pair (default 100)
+  final int maxTimeBonus;        // max bonus for finishing early (default 500)
+  final int penaltyPerMismatch;  // penalty for each wrong attempt (default 25)
+
   const ChallengeDefinition({
     required this.id,
     required this.name,
@@ -56,14 +65,25 @@ class ChallengeDefinition {
     this.targetSeconds = 5.0,
     this.rangeSeconds = 2.0,
     this.maxPoints = 1000,
+    // Pair‑Hunt defaults
+    this.blockCount = 12,
+    this.timeLimitSeconds = 60,
+    this.pointsPerPair = 100,
+    this.maxTimeBonus = 500,
+    this.penaltyPerMismatch = 25,
   });
 
   bool get isMindTimer => challengeType == ChallengeType.mindTimer;
   bool get isMath => challengeType == ChallengeType.math;
+  bool get isPairHunt => challengeType == ChallengeType.pairHunt;
+
+  /// Number of pairs in a Pair Hunt challenge (blocks / 2).
+  int get pairCount => blockCount ~/ 2;
 
   factory ChallengeDefinition.fromJson(Map<String, dynamic> json) {
+    final op = json['operation'] as String?;
     final type = (json['challengeType'] as String?) ??
-        (json['operation'] == 'mind_timer' ? 'mind_timer' : 'math');
+        (op == 'mind_timer' ? 'mind_timer' : op == 'pair_hunt' ? 'pair_hunt' : 'math');
     return ChallengeDefinition(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -79,6 +99,12 @@ class ChallengeDefinition {
       targetSeconds: (json['targetSeconds'] as num?)?.toDouble() ?? 5.0,
       rangeSeconds: (json['rangeSeconds'] as num?)?.toDouble() ?? 2.0,
       maxPoints: json['maxPoints'] as int? ?? 1000,
+      // Pair‑Hunt fields
+      blockCount: json['blockCount'] as int? ?? 12,
+      timeLimitSeconds: json['timeLimitSeconds'] as int? ?? 60,
+      pointsPerPair: json['pointsPerPair'] as int? ?? 100,
+      maxTimeBonus: json['maxTimeBonus'] as int? ?? 500,
+      penaltyPerMismatch: json['penaltyPerMismatch'] as int? ?? 25,
     );
   }
 
@@ -96,6 +122,11 @@ class ChallengeDefinition {
       'targetSeconds': targetSeconds,
       'rangeSeconds': rangeSeconds,
       'maxPoints': maxPoints,
+      'blockCount': blockCount,
+      'timeLimitSeconds': timeLimitSeconds,
+      'pointsPerPair': pointsPerPair,
+      'maxTimeBonus': maxTimeBonus,
+      'penaltyPerMismatch': penaltyPerMismatch,
     };
   }
 

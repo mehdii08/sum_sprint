@@ -6,6 +6,7 @@ import '../models/challenge_definition.dart';
 import '../l10n/app_localizations.dart';
 import 'game_screen.dart';
 import 'mind_timer_game_screen.dart';
+import 'pair_hunt_game_screen.dart';
 import 'history_screen.dart';
 
 class ChallengeListScreen extends StatelessWidget {
@@ -68,6 +69,18 @@ class _ChallengeCard extends StatelessWidget {
   const _ChallengeCard({required this.challenge, required this.l10n});
 
   Color _getDifficultyColor() {
+    if (challenge.isPairHunt) {
+      switch (challenge.id) {
+        case 'pair_hunt_easy':
+          return Colors.purple;
+        case 'pair_hunt_medium':
+          return Colors.deepPurple;
+        case 'pair_hunt_hard':
+          return Colors.indigo;
+        default:
+          return Colors.purple;
+      }
+    }
     if (challenge.isMindTimer) {
       switch (challenge.id) {
         case 'mind_timer_easy':
@@ -93,17 +106,9 @@ class _ChallengeCard extends StatelessWidget {
   }
 
   IconData _getDifficultyIcon() {
+    if (challenge.isPairHunt) return Icons.grid_view;
     if (challenge.isMindTimer) return Icons.timer;
-    switch (challenge.id) {
-      case 'easy_add':
-        return Icons.sentiment_satisfied;
-      case 'medium_add':
-        return Icons.sentiment_neutral;
-      case 'hard_mix':
-        return Icons.sentiment_dissatisfied;
-      default:
-        return Icons.help_outline;
-    }
+    return Icons.calculate;
   }
 
   @override
@@ -225,13 +230,23 @@ class _ChallengeCard extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => challenge.isMindTimer
-                              ? MindTimerGameScreen(challenge: challenge)
-                              : GameScreen(challenge: challenge),
+                          builder: (_) {
+                            if (challenge.isPairHunt) {
+                              return PairHuntGameScreen(challenge: challenge);
+                            }
+                            if (challenge.isMindTimer) {
+                              return MindTimerGameScreen(challenge: challenge);
+                            }
+                            return GameScreen(challenge: challenge);
+                          },
                         ),
                       );
                     },
-                    icon: Icon(challenge.isMindTimer ? Icons.timer : Icons.play_arrow),
+                    icon: Icon(challenge.isPairHunt
+                        ? Icons.grid_view
+                        : challenge.isMindTimer
+                            ? Icons.timer
+                            : Icons.play_arrow),
                     label: Text(
                       l10n.play,
                       style: const TextStyle(

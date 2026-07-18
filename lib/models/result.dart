@@ -18,6 +18,18 @@ class Result {
   /// Whether this result is for a Mind‑Timer challenge.
   final bool isMindTimer;
 
+  /// Whether this result is for a Pair‑Hunt challenge.
+  final bool isPairHunt;
+
+  /// Number of pairs found (Pair‑Hunt only).
+  final int pairsFound;
+
+  /// Total number of pairs in the challenge (Pair‑Hunt only).
+  final int totalPairs;
+
+  /// Number of mismatches (Pair‑Hunt only).
+  final int mismatchCount;
+
   Result({
     required this.challengeId,
     required this.score,
@@ -28,6 +40,10 @@ class Result {
     this.withinRangeCount = 0,
     this.averageAccuracy = 0.0,
     this.isMindTimer = false,
+    this.isPairHunt = false,
+    this.pairsFound = 0,
+    this.totalPairs = 0,
+    this.mismatchCount = 0,
   });
 
   factory Result.fromJson(Map<String, dynamic> json) {
@@ -41,6 +57,10 @@ class Result {
       withinRangeCount: json['withinRangeCount'] as int? ?? 0,
       averageAccuracy: (json['averageAccuracy'] as num?)?.toDouble() ?? 0.0,
       isMindTimer: json['isMindTimer'] as bool? ?? false,
+      isPairHunt: json['isPairHunt'] as bool? ?? false,
+      pairsFound: json['pairsFound'] as int? ?? 0,
+      totalPairs: json['totalPairs'] as int? ?? 0,
+      mismatchCount: json['mismatchCount'] as int? ?? 0,
     );
   }
 
@@ -54,6 +74,10 @@ class Result {
         'withinRangeCount': withinRangeCount,
         'averageAccuracy': averageAccuracy,
         'isMindTimer': isMindTimer,
+        'isPairHunt': isPairHunt,
+        'pairsFound': pairsFound,
+        'totalPairs': totalPairs,
+        'mismatchCount': mismatchCount,
       };
 
   double get averageTimeSeconds =>

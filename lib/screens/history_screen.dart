@@ -190,25 +190,46 @@ class _HistoryCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: result.correctCount == 10
-                              ? Colors.green.shade50
-                              : Colors.orange.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          l10n.correctOutOf(result.correctCount),
-                          style: TextStyle(
-                            fontSize: 12,
+                      if (result.isPairHunt)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: result.pairsFound >= result.totalPairs
+                                ? Colors.green.shade50
+                                : Colors.orange.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${result.pairsFound}/${result.totalPairs}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: result.pairsFound >= result.totalPairs
+                                  ? Colors.green.shade700
+                                  : Colors.orange.shade700,
+                            ),
+                          ),
+                        )
+                      else
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
                             color: result.correctCount == 10
-                                ? Colors.green.shade700
-                                : Colors.orange.shade700,
+                                ? Colors.green.shade50
+                                : Colors.orange.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            l10n.correctOutOf(result.correctCount),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: result.correctCount == 10
+                                  ? Colors.green.shade700
+                                  : Colors.orange.shade700,
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -223,12 +244,14 @@ class _HistoryCard extends StatelessWidget {
               ),
             ),
 
-            // Average time
+            // Average time / Total time
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '${result.averageTimeSeconds.toStringAsFixed(1)}s',
+                  result.isPairHunt
+                      ? '${(result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s'
+                      : '${result.averageTimeSeconds.toStringAsFixed(1)}s',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -236,7 +259,7 @@ class _HistoryCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  l10n.avg,
+                  result.isPairHunt ? l10n.pairHuntTimeTakenStat : l10n.avg,
                   style: TextStyle(
                     fontSize: 11,
                     color: Colors.grey.shade400,

@@ -166,6 +166,35 @@ class AppLocalizations {
     'challengeRuleQuestions': 'There are {count} questions in total.',
     'challengeRuleScore': 'Faster correct answers earn more points.',
     'challengeStart': 'Start',
+
+    // ── Pair Hunt ────────────────────────────────────────────────
+    'pairHuntPairs': 'Pairs',
+    'pairHuntPairsLabel': 'pairs',
+    'pairHuntTimeLimit': 'Time Limit',
+    'pairHuntTimeLimitValue': '{seconds}s',
+    'pairHuntBlocks': 'Blocks',
+    'pairHuntHowToPlay': 'How to Play',
+    'pairHuntRule1': 'Tap a block to reveal the emoji behind it.',
+    'pairHuntRule2': 'Tap another block — if the emojis match, they stay face‑up!',
+    'pairHuntRule3': "If they don't match, both flip back. Remember positions!",
+    'pairHuntRule4': 'Find all pairs within {seconds} seconds to maximize your score.',
+    'pairHuntStart': 'Start',
+    'pairHuntProgress': '{found}/{total} pairs',
+    'pairHuntTimeRemaining': '{seconds}s remaining',
+    'pairHuntMismatches': 'misses',
+    'pairHuntPairsFoundStat': 'Pairs',
+    'pairHuntMismatchStat': 'Misses',
+    'pairHuntTimeTakenStat': 'Time Taken',
+    'pairHuntFinished': 'All pairs found!',
+    'pairHuntTimeUp': "Time's Up!",
+    'pairHuntTypePrefix': 'Pair Hunt',
+    // ── Admin Pair Hunt ─────────────────────────────────────────
+    'adminTypePairHunt': 'Pair Hunt',
+    'adminTypePairHuntDesc': 'Memory card matching game with emojis',
+    'adminBlockCount': 'Block Count',
+    'adminPointsPerPair': 'Points/Pair',
+    'adminMaxTimeBonus': 'Max Time Bonus',
+    'adminPenaltyPerMismatch': 'Penalty/Mismatch',
   };
 
   // ── getters and parameterized methods ──
@@ -305,6 +334,37 @@ class AppLocalizations {
   String challengeRuleQuestions(Object count) => 'There are $count questions in total.';
   String get challengeRuleScore => _get('challengeRuleScore');
   String get challengeStart => _get('challengeStart');
+
+  // ── Pair Hunt ──────────────────────────────────────────────────────
+  String get pairHuntPairs => _get('pairHuntPairs');
+  String get pairHuntPairsLabel => _get('pairHuntPairsLabel');
+  String get pairHuntTimeLimit => _get('pairHuntTimeLimit');
+  String pairHuntTimeLimitValue(Object seconds) => '${seconds}s';
+  String get pairHuntBlocks => _get('pairHuntBlocks');
+  String get pairHuntHowToPlay => _get('pairHuntHowToPlay');
+  String get pairHuntRule1 => _get('pairHuntRule1');
+  String get pairHuntRule2 => _get('pairHuntRule2');
+  String get pairHuntRule3 => _get('pairHuntRule3');
+  String pairHuntRule4(Object seconds) =>
+      'Find all pairs within $seconds seconds to maximize your score.';
+  String get pairHuntStart => _get('pairHuntStart');
+  String pairHuntProgress(Object found, Object total) => '$found/$total pairs';
+  String pairHuntTimeRemaining(Object seconds) => '${seconds}s remaining';
+  String get pairHuntMismatches => _get('pairHuntMismatches');
+  String get pairHuntPairsFoundStat => _get('pairHuntPairsFoundStat');
+  String get pairHuntMismatchStat => _get('pairHuntMismatchStat');
+  String get pairHuntTimeTakenStat => _get('pairHuntTimeTakenStat');
+  String get pairHuntFinished => _get('pairHuntFinished');
+  String get pairHuntTimeUp => _get('pairHuntTimeUp');
+  String get pairHuntTypePrefix => _get('pairHuntTypePrefix');
+
+  // ── Admin Pair Hunt ────────────────────────────────────────────────
+  String get adminTypePairHunt => _get('adminTypePairHunt');
+  String get adminTypePairHuntDesc => _get('adminTypePairHuntDesc');
+  String get adminBlockCount => _get('adminBlockCount');
+  String get adminPointsPerPair => _get('adminPointsPerPair');
+  String get adminMaxTimeBonus => _get('adminMaxTimeBonus');
+  String get adminPenaltyPerMismatch => _get('adminPenaltyPerMismatch');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

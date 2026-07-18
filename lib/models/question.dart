@@ -85,3 +85,48 @@ class MindTimerResult {
     required this.rangeSeconds,
   });
 }
+
+// ── Pair Hunt models ──────────────────────────────────────────────
+
+/// A single block in the Pair Hunt grid.
+class PairHuntBlock {
+  /// The emoji displayed on this block.
+  final String emoji;
+
+  /// Index of this block in the grid (0-based).
+  final int index;
+
+  /// Whether this block is currently face-up (revealed).
+  bool isRevealed;
+
+  /// Whether this block has been permanently matched.
+  bool isMatched;
+
+  PairHuntBlock({
+    required this.emoji,
+    required this.index,
+    this.isRevealed = false,
+    this.isMatched = false,
+  });
+}
+
+/// The outcome of a Pair Hunt game.
+class PairHuntGameResult {
+  final int score;
+  final int pairsFound;
+  final int totalPairs;
+  final int mismatchCount;
+  final double timeTakenSeconds;
+  final double timeLimitSeconds;
+
+  bool get allPairsFound => pairsFound >= totalPairs;
+
+  const PairHuntGameResult({
+    required this.score,
+    required this.pairsFound,
+    required this.totalPairs,
+    required this.mismatchCount,
+    required this.timeTakenSeconds,
+    required this.timeLimitSeconds,
+  });
+}

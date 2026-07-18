@@ -6,10 +6,12 @@ import '../models/challenge_definition.dart';
 import '../providers/result_provider.dart';
 import '../providers/challenge_provider.dart';
 import '../providers/mind_timer_provider.dart';
+import '../providers/pair_hunt_provider.dart';
 import '../providers/competition_provider.dart';
 import '../l10n/app_localizations.dart';
 import 'game_screen.dart';
 import 'mind_timer_game_screen.dart';
+import 'pair_hunt_game_screen.dart';
 import 'home_screen.dart';
 
 class ResultScreen extends StatefulWidget {
@@ -100,13 +102,21 @@ class _ResultScreenState extends State<ResultScreen> {
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        widget.result.correctCount == widget.challenge.questionCount
-                            ? Icons.emoji_events
-                            : Icons.workspace_premium,
+                        widget.result.isPairHunt
+                            ? (widget.result.pairsFound >= widget.result.totalPairs
+                                ? Icons.emoji_events
+                                : Icons.grid_view)
+                            : widget.result.correctCount == widget.challenge.questionCount
+                                ? Icons.emoji_events
+                                : Icons.workspace_premium,
                         size: 72,
-                        color: widget.result.correctCount == widget.challenge.questionCount
-                            ? Colors.amber
-                            : Colors.white70,
+                        color: widget.result.isPairHunt
+                            ? (widget.result.pairsFound >= widget.result.totalPairs
+                                ? Colors.amber
+                                : Colors.white70)
+                            : widget.result.correctCount == widget.challenge.questionCount
+                                ? Colors.amber
+                                : Colors.white70,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -156,23 +166,32 @@ class _ResultScreenState extends State<ResultScreen> {
                           const Divider(height: 32),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: widget.result.isMindTimer
+                            children: widget.result.isPairHunt
                                 ? [
-                                    _StatItem(icon: Icons.check_circle, color: Colors.green,
-                                        value: '${widget.result.withinRangeCount}/${widget.challenge.questionCount}', label: l10n.withinRangeStat),
-                                    _StatItem(icon: Icons.speed, color: Colors.blue,
-                                        value: '${(widget.result.averageAccuracy * 100).toStringAsFixed(0)}%', label: l10n.avgAccuracyStat),
+                                    _StatItem(icon: Icons.grid_view, color: Colors.green,
+                                        value: '${widget.result.pairsFound}/${widget.result.totalPairs}', label: l10n.pairHuntPairsFoundStat),
+                                    _StatItem(icon: Icons.warning_amber, color: Colors.orange,
+                                        value: '${widget.result.mismatchCount}', label: l10n.pairHuntMismatchStat),
                                     _StatItem(icon: Icons.timer, color: Colors.purple,
-                                        value: '${(widget.result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s', label: l10n.totalTimeStat),
+                                        value: '${(widget.result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s', label: l10n.pairHuntTimeTakenStat),
                                   ]
-                                : [
-                                    _StatItem(icon: Icons.check_circle, color: Colors.green,
-                                        value: '${widget.result.correctCount}/${widget.challenge.questionCount}', label: l10n.correctStat),
-                                    _StatItem(icon: Icons.timer, color: Colors.blue,
-                                        value: widget.result.averageTimeSeconds.toStringAsFixed(1), label: l10n.avgTimeStat),
-                                    _StatItem(icon: Icons.speed, color: Colors.purple,
-                                        value: '${(widget.result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s', label: l10n.totalTimeStat),
-                                  ],
+                                : widget.result.isMindTimer
+                                    ? [
+                                        _StatItem(icon: Icons.check_circle, color: Colors.green,
+                                            value: '${widget.result.withinRangeCount}/${widget.challenge.questionCount}', label: l10n.withinRangeStat),
+                                        _StatItem(icon: Icons.speed, color: Colors.blue,
+                                            value: '${(widget.result.averageAccuracy * 100).toStringAsFixed(0)}%', label: l10n.avgAccuracyStat),
+                                        _StatItem(icon: Icons.timer, color: Colors.purple,
+                                            value: '${(widget.result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s', label: l10n.totalTimeStat),
+                                      ]
+                                    : [
+                                        _StatItem(icon: Icons.check_circle, color: Colors.green,
+                                            value: '${widget.result.correctCount}/${widget.challenge.questionCount}', label: l10n.correctStat),
+                                        _StatItem(icon: Icons.timer, color: Colors.blue,
+                                            value: widget.result.averageTimeSeconds.toStringAsFixed(1), label: l10n.avgTimeStat),
+                                        _StatItem(icon: Icons.speed, color: Colors.purple,
+                                            value: '${(widget.result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s', label: l10n.totalTimeStat),
+                                      ],
                           ),
                         ],
                       ),
@@ -210,7 +229,11 @@ class _ResultScreenState extends State<ResultScreen> {
                         width: double.infinity, height: 56,
                         child: ElevatedButton.icon(
                           onPressed: () {
-                            if (widget.challenge.isMindTimer) {
+                            if (widget.challenge.isPairHunt) {
+                              context.read<PairHuntProvider>().reset();
+                              Navigator.pushReplacement(context,
+                                  MaterialPageRoute(builder: (_) => PairHuntGameScreen(challenge: widget.challenge, competitionId: widget.competitionId)));
+                            } else if (widget.challenge.isMindTimer) {
                               context.read<MindTimerProvider>().reset();
                               Navigator.pushReplacement(context,
                                   MaterialPageRoute(builder: (_) => MindTimerGameScreen(challenge: widget.challenge, competitionId: widget.competitionId)));
@@ -238,6 +261,7 @@ class _ResultScreenState extends State<ResultScreen> {
                         onPressed: () {
                           context.read<ChallengeProvider>().reset();
                           context.read<MindTimerProvider>().reset();
+                          context.read<PairHuntProvider>().reset();
                           if (isCompetition) {
                             Navigator.pop(context);
                           } else {
