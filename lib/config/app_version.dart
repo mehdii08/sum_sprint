@@ -5,10 +5,10 @@ class AppVersion {
   AppVersion._();
 
   /// The semantic version string (e.g. "1.0.1").
-  static const String version = '1.0.24';
+  static const String version = '1.0.25';
 
   /// The build number (e.g. 16).
-  static const int buildNumber = 24;
+  static const int buildNumber = 25;
 
   /// Full version string for display (e.g. "v1.0.16").
   static const String display = 'v$version';
