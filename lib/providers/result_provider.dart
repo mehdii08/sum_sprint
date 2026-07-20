@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
 import '../models/result.dart';
 import '../repositories/local_result_repository.dart';
+import '../repositories/supabase_result_repository.dart';
 
 class ResultProvider extends ChangeNotifier {
   final LocalResultRepository _repository = LocalResultRepository();
+  final SupabaseResultRepository _supabaseRepo = SupabaseResultRepository();
   final Map<String, List<Result>> _resultsCache = {};
   final Map<String, int> _highScoreCache = {};
 
@@ -28,12 +30,18 @@ class ResultProvider extends ChangeNotifier {
   Future<void> saveResult(Result result) async {
     await _repository.saveResult(result);
 
-    // Update cache
+    // Also save to Supabase so leaderboards (global + custom) stay updated.
+    // Silently skip if the user is not logged in.
+    try {
+      await _supabaseRepo.saveResult(result);
+    } catch (e) {
+      debugPrint('[ResultProvider] Supabase save skipped: $e');
+    }
+
     final existing = _resultsCache[result.challengeId] ?? [];
     existing.insert(0, result);
     _resultsCache[result.challengeId] = existing;
 
-    // Update high score
     final currentHigh = _highScoreCache[result.challengeId] ?? 0;
     if (result.score > currentHigh) {
       _highScoreCache[result.challengeId] = result.score;

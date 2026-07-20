@@ -51,7 +51,6 @@ class SupabaseResultRepository implements ResultRepository {
       });
     } catch (e) {
       debugPrint('Failed to save result online: $e');
-      rethrow;
     }
   }
 

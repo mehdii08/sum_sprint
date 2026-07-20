@@ -6,15 +6,11 @@ import '../providers/challenge_provider.dart';
 import '../providers/player_provider.dart';
 import '../providers/result_provider.dart';
 import '../l10n/app_localizations.dart';
-import '../widgets/answer_button.dart';
-import '../widgets/timer_bar.dart';
-import '../widgets/score_display.dart';
+import '../theme/app_theme.dart';
 import 'result_screen.dart';
 
 class GameScreen extends StatefulWidget {
   final ChallengeDefinition challenge;
-  /// If non-null, the game is played in competition mode and results
-  /// should be submitted to Supabase for this competition.
   final String? competitionId;
 
   const GameScreen({super.key, required this.challenge, this.competitionId});
@@ -23,8 +19,7 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen>
-    with TickerProviderStateMixin {
+class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   late AnimationController _correctAnimController;
   late AnimationController _wrongAnimController;
   late Animation<double> _scaleAnimation;
@@ -35,14 +30,8 @@ class _GameScreenState extends State<GameScreen>
   void initState() {
     super.initState();
 
-    _correctAnimController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    );
-    _wrongAnimController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
+    _correctAnimController = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
+    _wrongAnimController = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
 
     _scaleAnimation = TweenSequence<double>([
       TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.2), weight: 1),
@@ -71,19 +60,13 @@ class _GameScreenState extends State<GameScreen>
     super.dispose();
   }
 
-  void _triggerCorrectAnimation() {
-    _correctAnimController.forward(from: 0);
-  }
-
-  void _triggerWrongAnimation() {
-    _wrongAnimController.forward(from: 0);
-  }
+  void _triggerCorrectAnimation() => _correctAnimController.forward(from: 0);
+  void _triggerWrongAnimation() => _wrongAnimController.forward(from: 0);
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    // Before the challenge starts, show the "How to Play" instructions.
     if (!_started) {
       return _buildInstructionView(l10n);
     }
@@ -91,138 +74,169 @@ class _GameScreenState extends State<GameScreen>
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) {
-          _showExitConfirmation(l10n);
-        }
+        if (!didPop) _showExitConfirmation(l10n);
       },
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(widget.challenge.name),
-          backgroundColor: const Color(0xFF1A237E),
-          foregroundColor: Colors.white,
-          leading: IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () => _showExitConfirmation(l10n),
+      child: Container(
+        decoration: const BoxDecoration(gradient: kBgGradient),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            title: Text(widget.challenge.name,
+                style: const TextStyle(color: kTextPrimary, fontWeight: FontWeight.bold)),
+            backgroundColor: kSurfaceDark,
+            foregroundColor: kTextPrimary,
+            elevation: 0,
+            leading: IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: kTextPrimary.withAlpha(10),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.close_rounded, color: kTextPrimary, size: 20),
+              ),
+              onPressed: () => _showExitConfirmation(l10n),
+            ),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _difficultyColor.withAlpha(20),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: _difficultyColor.withAlpha(60)),
+                  ),
+                  child: Text(widget.challenge.isTicTacToe ? 'HARD' : 'MEDIUM',
+                      style: TextStyle(color: _difficultyColor, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.0)),
+                ),
+              ),
+            ],
+          ),
+          body: Consumer<ChallengeProvider>(
+            builder: (context, provider, _) {
+              if (provider.gameState == GameState.finished) {
+                if (!_navigated) {
+                  _navigated = true;
+                  Timer.run(() => _navigateToResult(provider));
+                }
+                return const Center(child: CircularProgressIndicator(color: kAccentPurple));
+              }
+              return _buildGameplay(provider, l10n);
+            },
           ),
         ),
-        body: Consumer<ChallengeProvider>(
-          builder: (context, provider, _) {
-            // Check for game finished — navigate via addPostFrameCallback
-            // so the current frame completes before we replace the screen.
-            if (provider.gameState == GameState.finished) {
-              if (!_navigated) {
-                _navigated = true;
-                Timer.run(() => _navigateToResult(provider));
-              }
-              return const Center(child: CircularProgressIndicator());
-            }
+      ),
+    );
+  }
 
-            return SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
+  Color get _difficultyColor => kAccentCyan;
+
+  Widget _buildGameplay(ChallengeProvider provider, AppLocalizations l10n) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            _buildProgressDots(provider),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Round ${provider.currentQuestionIndex + 1}/${provider.totalQuestions}',
+                    style: const TextStyle(color: kTextSecondary, fontSize: 13, fontWeight: FontWeight.w500)),
+                Row(
+                  children: [
+                    const Icon(Icons.check_circle_rounded, color: kAccentPurple, size: 16),
+                    const SizedBox(width: 4),
+                    Text('${provider.correctCount}/${provider.totalQuestions}',
+                        style: const TextStyle(color: kAccentPurple, fontSize: 13, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildCircularTimer(provider),
+            const SizedBox(height: 24),
+            if (provider.currentQuestion != null) ...[
+              AnimatedBuilder(
+                animation: Listenable.merge([_correctAnimController, _wrongAnimController]),
+                builder: (context, child) {
+                  return Transform.scale(
+                    scale: _correctAnimController.isAnimating ? _scaleAnimation.value : 1.0,
+                    child: Transform.translate(
+                      offset: Offset(_wrongAnimController.isAnimating ? _shakeAnimation.value : 0, 0),
+                      child: child,
+                    ),
+                  );
+                },
                 child: Column(
                   children: [
-                    // Top bar: question counter and score
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Chip(
-                          avatar: const Icon(Icons.quiz, size: 18),
-                          label: Text(
-                            '${provider.currentQuestionIndex + 1}/${provider.totalQuestions}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                        ScoreDisplay(
-                          score: 0,
-                          correctCount: provider.correctCount,
-                          totalQuestions: provider.totalQuestions,
-                        ),
-                      ],
-                    ),
+                    _GlassNumberBox(number: provider.currentQuestion!.num1, color: kAccentCyan),
                     const SizedBox(height: 12),
-
-                    // Timer bar
-                    TimerBar(progress: provider.timerProgress),
-                    const SizedBox(height: 8),
-
-                    // Time left text
-                    Text(
-                      '${(provider.timeLeftMs / 1000).toStringAsFixed(1)}s',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: provider.timerProgress < 0.33
-                            ? Colors.red
-                            : Colors.grey.shade700,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Number boxes
-                    if (provider.currentQuestion != null) ...[
-                      AnimatedBuilder(
-                        animation: Listenable.merge([
-                          _correctAnimController,
-                          _wrongAnimController,
-                        ]),
-                        builder: (context, child) {
-                          return Transform.scale(
-                            scale: _correctAnimController.isAnimating
-                                ? _scaleAnimation.value
-                                : 1.0,
-                            child: Transform.translate(
-                              offset: Offset(
-                                _wrongAnimController.isAnimating
-                                    ? _shakeAnimation.value
-                                    : 0,
-                                0,
-                              ),
-                              child: child,
-                            ),
-                          );
-                        },
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _NumberBox(
-                              number: provider.currentQuestion!.num1,
-                              color: Colors.blue.shade100,
-                            ),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 16),
-                              child: Text(
-                                '+',
-                                style: TextStyle(
-                                  fontSize: 36,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            _NumberBox(
-                              number: provider.currentQuestion!.num2,
-                              color: Colors.orange.shade100,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-
-                    const Spacer(),
-
-                    // Answer buttons / Waiting / Time's Up
-                    _buildAnswerArea(provider, l10n),
-
-                    const SizedBox(height: 20),
+                    const Text('+', style: TextStyle(color: kAccentPurple, fontSize: 28, fontWeight: FontWeight.w300)),
+                    const SizedBox(height: 12),
+                    _GlassNumberBox(number: provider.currentQuestion!.num2, color: kAccentGold),
                   ],
                 ),
               ),
-            );
-          },
+            ],
+            const Spacer(),
+            _buildAnswerArea(provider, l10n),
+            const SizedBox(height: 16),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildProgressDots(ChallengeProvider provider) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(provider.totalQuestions, (i) {
+        final isPast = i < provider.currentQuestionIndex;
+        final isCurrent = i == provider.currentQuestionIndex;
+        return Container(
+          width: isCurrent ? 32 : 10,
+          height: 10,
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(5),
+            color: isCurrent
+                ? kAccentPurple
+                : isPast
+                    ? kAccentPurple.withAlpha(100)
+                    : kTextMuted.withAlpha(60),
+            boxShadow: isCurrent ? [BoxShadow(color: kAccentPurple.withAlpha(80), blurRadius: 6)] : null,
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildCircularTimer(ChallengeProvider provider) {
+    final progress = provider.timerProgress;
+    final color = progress > 0.5 ? kAccentPurple : progress > 0.25 ? kAccentGold : Colors.redAccent;
+    final seconds = (provider.timeLeftMs / 1000).toStringAsFixed(1);
+
+    return SizedBox(
+      width: 64,
+      height: 64,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          SizedBox(
+            width: 64,
+            height: 64,
+            child: CircularProgressIndicator(
+              value: progress.clamp(0.0, 1.0),
+              strokeWidth: 5,
+              backgroundColor: kTextPrimary.withAlpha(10),
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+            ),
+          ),
+          Text(seconds, style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.w800)),
+        ],
       ),
     );
   }
@@ -230,24 +244,20 @@ class _GameScreenState extends State<GameScreen>
   Widget _buildAnswerArea(ChallengeProvider provider, AppLocalizations l10n) {
     switch (provider.gameState) {
       case GameState.waitingForOptions:
-        return SizedBox(
+        return Container(
           height: 100,
-          child: Center(
-            child: Text(
-              l10n.getReady,
-              style: const TextStyle(
-                fontSize: 20,
-                color: Colors.grey,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+          decoration: BoxDecoration(
+            color: kAccentPurple.withAlpha(10),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: kAccentPurple.withAlpha(20)),
+          ),
+          child: const Center(
+            child: Text('Get ready...', style: TextStyle(color: kTextSecondary, fontSize: 20, fontWeight: FontWeight.w500)),
           ),
         );
 
       case GameState.playing:
-        if (provider.currentQuestion == null) {
-          return const SizedBox.shrink();
-        }
+        if (provider.currentQuestion == null) return const SizedBox.shrink();
         return _buildAnswerButtons(provider);
 
       case GameState.showingResult:
@@ -265,76 +275,82 @@ class _GameScreenState extends State<GameScreen>
       runSpacing: 16,
       alignment: WrapAlignment.center,
       children: question.options.map((value) {
-        return AnswerButton(
-          value: value,
-          onTap: () {
-            provider.answerQuestion(value);
-            final isCorrect = value == question.correctAnswer;
-            if (isCorrect) {
-              _triggerCorrectAnimation();
-            } else {
-              _triggerWrongAnimation();
-            }
-          },
-          isDisabled: provider.gameState != GameState.playing,
+        return GestureDetector(
+          onTap: provider.gameState != GameState.playing
+              ? null
+              : () {
+                  provider.answerQuestion(value);
+                  if (value == question.correctAnswer) {
+                    _triggerCorrectAnimation();
+                  } else {
+                    _triggerWrongAnimation();
+                  }
+                },
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 1.0, end: provider.gameState != GameState.playing ? 0.7 : 1.0),
+            duration: const Duration(milliseconds: 200),
+            builder: (context, scale, child) => Transform.scale(scale: scale, child: child),
+            child: Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                color: kSurfaceDark,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: kAccentPurple.withAlpha(50), width: 1.5),
+                boxShadow: [BoxShadow(color: kAccentPurple.withAlpha(15), blurRadius: 12)],
+              ),
+              child: Center(
+                child: Text(value.toString(),
+                    style: const TextStyle(color: kTextPrimary, fontSize: 32, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ),
         );
       }).toList(),
     );
   }
 
-  Widget _buildResultFeedback(
-      ChallengeProvider provider, AppLocalizations l10n) {
+  Widget _buildResultFeedback(ChallengeProvider provider, AppLocalizations l10n) {
     final isTimeout = provider.lastAnswerTimeout;
     final isCorrect = provider.lastAnswerCorrect;
+    final correctAnswer = provider.lastCorrectAnswer;
 
-    Color bgColor;
+    Color glowColor;
     IconData icon;
     String text;
 
     if (isTimeout) {
-      bgColor = Colors.orange.shade100;
-      icon = Icons.timer_off;
+      glowColor = kAccentGold;
+      icon = Icons.timer_off_rounded;
       text = l10n.timeUp;
     } else if (isCorrect) {
-      bgColor = Colors.green.shade100;
-      icon = Icons.check_circle;
+      glowColor = Colors.greenAccent;
+      icon = Icons.check_circle_rounded;
       text = l10n.correct;
     } else {
-      bgColor = Colors.red.shade100;
-      icon = Icons.cancel;
+      glowColor = Colors.redAccent;
+      icon = Icons.cancel_rounded;
       text = l10n.wrong;
     }
-
-    // Show correct answer if wrong (use stored answer from before advancing)
-    final correctAnswer = provider.lastCorrectAnswer;
 
     return Container(
       height: 100,
       decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(16),
+        color: glowColor.withAlpha(15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: glowColor.withAlpha(50)),
+        boxShadow: [BoxShadow(color: glowColor.withAlpha(15), blurRadius: 16)],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 36, color: isCorrect ? Colors.green : Colors.red),
+          Icon(icon, size: 36, color: glowColor),
           const SizedBox(height: 4),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: isCorrect ? Colors.green.shade800 : Colors.red.shade800,
-            ),
-          ),
+          Text(text,
+              style: TextStyle(color: glowColor, fontSize: 20, fontWeight: FontWeight.bold)),
           if (!isCorrect && correctAnswer != null && !isTimeout)
-            Text(
-              l10n.answerWas(correctAnswer),
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.red.shade600,
-              ),
-            ),
+            Text(l10n.answerWas(correctAnswer),
+                style: TextStyle(color: glowColor.withAlpha(180), fontSize: 14)),
         ],
       ),
     );
@@ -342,143 +358,155 @@ class _GameScreenState extends State<GameScreen>
 
   Widget _buildInstructionView(AppLocalizations l10n) {
     final challenge = widget.challenge;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(challenge.name),
-        backgroundColor: const Color(0xFF1A237E),
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context),
+    return Container(
+      decoration: const BoxDecoration(gradient: kBgGradient),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: kSurfaceDark,
+          elevation: 0,
+          leading: IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: kTextPrimary.withAlpha(10),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.arrow_back_rounded, color: kTextPrimary, size: 20),
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: Text(challenge.name,
+              style: const TextStyle(color: kTextPrimary, fontWeight: FontWeight.bold)),
+          centerTitle: true,
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _difficultyColor.withAlpha(20),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: _difficultyColor.withAlpha(60)),
+                  boxShadow: [BoxShadow(color: _difficultyColor.withAlpha(15), blurRadius: 8)],
+                ),
+                child: const Text('MEDIUM',
+                    style: TextStyle(color: kAccentCyan, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.0)),
+              ),
+            ),
+          ],
         ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
+        body: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
           child: Column(
             children: [
-              const SizedBox(height: 8),
-              // Header icon
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFF6F00).withAlpha(25),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.calculate,
-                  size: 40,
-                  color: Color(0xFFFF6F00),
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Challenge title
-              Text(
-                challenge.name,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1A237E),
-                ),
-              ),
-              const SizedBox(height: 8),
-              // Description
-              Text(
-                challenge.description,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                ),
-              ),
               const SizedBox(height: 28),
-              // "How to Play" section
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(16),
+                  color: kSurfaceDark,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: kAccentPurple.withAlpha(30), width: 0.8),
+                  boxShadow: [BoxShadow(color: kAccentPurple.withAlpha(12), blurRadius: 16)],
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: kAccentPurple.withAlpha(15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text('R 1/${challenge.questionCount}  •  ${challenge.maxPoints} PTS',
+                          style: TextStyle(color: kAccentPurple, fontSize: 12, fontWeight: FontWeight.w600)),
+                    ),
+                    const SizedBox(height: 20),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.info_outline,
-                            color: Color(0xFF1A237E), size: 22),
-                        const SizedBox(width: 8),
-                        Text(
-                          l10n.challengeHowToPlay,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1A237E),
-                          ),
+                        _GlassNumberBox(number: 47, color: kAccentCyan),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          child: Text('+', style: TextStyle(color: kAccentPurple, fontSize: 32, fontWeight: FontWeight.w300)),
                         ),
+                        _GlassNumberBox(number: 28, color: kAccentGold),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    _InstructionRow(
-                      icon: Icons.looks_one,
-                      text: l10n.challengeRuleAdd,
+                    const SizedBox(height: 24),
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: kAccentPurple.withAlpha(40), width: 5),
+                      ),
+                      child: const Center(
+                        child: Text('5.0', style: TextStyle(color: kAccentPurple, fontSize: 16, fontWeight: FontWeight.w800)),
+                      ),
                     ),
-                    const SizedBox(height: 12),
-                    _InstructionRow(
-                      icon: Icons.touch_app,
-                      text: l10n.challengeRuleAnswer,
-                    ),
-                    const SizedBox(height: 12),
-                    _InstructionRow(
-                      icon: Icons.timer,
-                      text: l10n.challengeRuleTimer(
-                          challenge.timePerQuestionSeconds),
-                    ),
-                    const SizedBox(height: 12),
-                    _InstructionRow(
-                      icon: Icons.quiz,
-                      text: l10n
-                          .challengeRuleQuestions(challenge.questionCount),
-                    ),
-                    const SizedBox(height: 12),
-                    _InstructionRow(
-                      icon: Icons.star,
-                      text: l10n.challengeRuleScore,
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(3, (_) {
+                        return Container(
+                          width: 70,
+                          height: 70,
+                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                          decoration: BoxDecoration(
+                            color: kSurfaceDark,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: kAccentPurple.withAlpha(40), width: 1.5),
+                          ),
+                          child: const Center(
+                            child: Text('?', style: TextStyle(color: kTextMuted, fontSize: 26, fontWeight: FontWeight.bold)),
+                          ),
+                        );
+                      }),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
+              const Text('Solve fast. Don\'t blink.',
+                  style: TextStyle(color: kTextPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              const Text('Select the correct answer before time runs out.\nConsecutive correct answers build your multiplier.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: kTextSecondary, fontSize: 13)),
+              const SizedBox(height: 20),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  _InfoPill(icon: Icons.bolt_rounded, text: '${challenge.questionCount} Rounds'),
+                  _InfoPill(icon: Icons.timer_rounded, text: '${challenge.timePerQuestionSeconds}s Each'),
+                  _InfoPill(icon: Icons.star_rounded, text: '${challenge.maxPoints} Max Pts'),
+                ],
+              ),
+              const SizedBox(height: 40),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton.icon(
+                  onPressed: _onStart,
+                  icon: const Icon(Icons.play_arrow_rounded, size: 26),
+                  label: const Text('START GAME',
+                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: 1.2)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kAccentPurple,
+                    foregroundColor: kTextPrimary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    elevation: 0,
+                    shadowColor: kAccentPurple,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text('PERSONAL BEST: -- PTS',
+                  style: TextStyle(color: kTextMuted, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.8)),
+              const SizedBox(height: 32),
             ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-          child: SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton.icon(
-              onPressed: _onStart,
-              icon: const Icon(Icons.play_arrow, size: 28),
-              label: Text(
-                l10n.challengeStart,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF6F00),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 4,
-              ),
-            ),
           ),
         ),
       ),
@@ -489,12 +517,13 @@ class _GameScreenState extends State<GameScreen>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.quitGame),
-        content: Text(l10n.quitGameConfirm),
+        backgroundColor: kSurfaceDark,
+        title: Text(l10n.quitGame, style: const TextStyle(color: kTextPrimary)),
+        content: Text(l10n.quitGameConfirm, style: const TextStyle(color: kTextSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.keepPlaying),
+            child: Text(l10n.keepPlaying, style: const TextStyle(color: kAccentPurple)),
           ),
           TextButton(
             onPressed: () {
@@ -503,7 +532,7 @@ class _GameScreenState extends State<GameScreen>
               provider.reset();
               Navigator.pop(context);
             },
-            child: Text(l10n.quit, style: const TextStyle(color: Colors.red)),
+            child: Text(l10n.quit, style: const TextStyle(color: Colors.redAccent)),
           ),
         ],
       ),
@@ -513,101 +542,74 @@ class _GameScreenState extends State<GameScreen>
   bool _navigated = false;
 
   void _navigateToResult(ChallengeProvider provider) {
-    debugPrint('[GameScreen] _navigateToResult — competitionId=${widget.competitionId}');
     final playerProvider = context.read<PlayerProvider>();
     final result = provider.finalizeResult(playerProvider.playerData);
-    debugPrint('[GameScreen] _navigateToResult — score=${result.score} correct=${result.correctCount}');
-
     context.read<ResultProvider>().saveResult(result);
 
     if (!mounted) return;
 
     if (widget.competitionId != null) {
-      // Competition mode: pop with result data so the parent detail screen
-      // can push ResultScreen and reload state at the right time.
       Navigator.pop(context, {
         'result': result,
         'challenge': widget.challenge,
         'competitionId': widget.competitionId,
       });
     } else {
-      // Offline warm-up mode: push ResultScreen directly (existing behaviour).
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => ResultScreen(
-            result: result,
-            challenge: widget.challenge,
-          ),
+          builder: (_) => ResultScreen(result: result, challenge: widget.challenge),
         ),
       );
     }
   }
 }
 
-class _InstructionRow extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _InstructionRow({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 20, color: const Color(0xFF1A237E)),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(
-              fontSize: 15,
-              color: Color(0xFF1A237E),
-              height: 1.4,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _NumberBox extends StatelessWidget {
+class _GlassNumberBox extends StatelessWidget {
   final int number;
   final Color color;
-
-  const _NumberBox({required this.number, required this.color});
+  const _GlassNumberBox({required this.number, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 80,
-      height: 80,
+      width: 90,
+      height: 90,
       decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: color.withAlpha(200),
-          width: 3,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: color.withAlpha(100),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: color.withAlpha(10),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: color.withAlpha(40), width: 2),
+        boxShadow: [BoxShadow(color: color.withAlpha(15), blurRadius: 12)],
       ),
       child: Center(
-        child: Text(
-          number.toString(),
-          style: const TextStyle(
-            fontSize: 36,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1A237E),
-          ),
-        ),
+        child: Text(number.toString(),
+            style: TextStyle(color: color, fontSize: 36, fontWeight: FontWeight.w800)),
+      ),
+    );
+  }
+}
+
+class _InfoPill extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  const _InfoPill({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: kSurfaceDark,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: kAccentPurple.withAlpha(30)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: kAccentPurple, size: 16),
+          const SizedBox(width: 6),
+          Text(text, style: const TextStyle(color: kAccentCyan, fontSize: 12, fontWeight: FontWeight.w600)),
+        ],
       ),
     );
   }

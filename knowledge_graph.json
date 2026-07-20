@@ -1,0 +1,966 @@
+{
+  "$schema": "https://sum_sprint/knowledge_graph/v1",
+  "project": {
+    "name": "Sum Sprint",
+    "version": "1.0.25",
+    "description": "Multi-mode educational math game built with Flutter. Supports offline warm-up practice and online competitions via Supabase.",
+    "platforms": ["Android", "iOS", "Web", "macOS", "Linux", "Windows"],
+    "repository": "local"
+  },
+  "architecture": {
+    "pattern": "Provider-based state management with repository pattern",
+    "data_flow": "Assets/Supabase → Repositories → Providers (ChangeNotifier) → Screens (Consumer/context.watch) → Services (pure logic runners) → Scoring (pure functions) → Models (immutable data)",
+    "layers": {
+      "ui": "screens/, widgets/",
+      "state": "providers/",
+      "data": "repositories/",
+      "business_logic": "services/",
+      "domain": "models/",
+      "config": "config/",
+      "platform": "platform/",
+      "utils": "utils/",
+      "i18n": "l10n/"
+    }
+  },
+  "tech_stack": {
+    "framework": "Flutter (Dart, SDK ^3.10.0)",
+    "state_management": "provider ^6.1.1",
+    "local_storage": "shared_preferences ^2.2.2",
+    "backend": "Supabase (supabase_flutter ^2.8.1)",
+    "auth": "Supabase Auth (email/password + Telegram OAuth via edge function)",
+    "i18n": "flutter_localizations + intl ^0.20.2",
+    "audio": "audioplayers ^5.2.1",
+    "fonts": "google_fonts ^6.1.0"
+  },
+  "external_integrations": {
+    "supabase": {
+      "url": "https://xnwjbrtbpjaeuqyrkyvg.supabase.co",
+      "tables": ["profiles", "competitions", "participants", "challenge_results", "prizes"],
+      "rpc_functions": ["join_competition", "update_participant_score", "distribute_prizes", "get_final_leaderboard"],
+      "edge_functions": ["telegram-auth"],
+      "features": ["auth", "database", "realtime", "rpc"]
+    },
+    "telegram": {
+      "platform": "Web only",
+      "integration": "Reads initData from DOM element #telegram-bridge, posts to Supabase edge function for auth"
+    }
+  },
+  "file_tree": {
+    "lib/main.dart": "App entry point, Supabase init, MultiProvider wiring",
+    "lib/config/app_version.dart": "AppVersion constants",
+    "lib/config/supabase_config.dart": "SupabaseConfig (url, anonKey, admin usernames, debug mode)",
+    "lib/l10n/app_en.arb": "English ARB translation file",
+    "lib/l10n/app_localizations.dart": "AppLocalizations class with ~150+ translation getters",
+    "lib/models/challenge_definition.dart": "ChallengeType enum, ChallengeDefinition class",
+    "lib/models/competition.dart": "CompetitionStatus enum, Competition, Participant, LeaderboardEntry classes",
+    "lib/models/player_data.dart": "PlayerData class",
+    "lib/models/question.dart": "Question, QuestionResult, MindTimerQuestion, MindTimerResult, PairHuntBlock, PairHuntGameResult, TicTacToeMark, TicTacToeDifficulty, TicTacToeRoundOutcome, TicTacToeRoundResult",
+    "lib/models/result.dart": "Result class (universal across all challenge types)",
+    "lib/services/question_generator.dart": "QuestionGenerator",
+    "lib/services/score_calculator.dart": "ScoreCalculator (math scoring)",
+    "lib/services/challenge_runner.dart": "ChallengeRunner (math game orchestration)",
+    "lib/services/mind_timer_scoring.dart": "MindTimerScoring",
+    "lib/services/mind_timer_runner.dart": "MindTimerRunner",
+    "lib/services/pair_hunt_scoring.dart": "PairHuntScoring",
+    "lib/services/pair_hunt_runner.dart": "PairHuntRunner",
+    "lib/services/tic_tac_toe_ai.dart": "TicTacToeBoard, TicTacToeAi (easy/medium/hard/minimax)",
+    "lib/services/tic_tac_toe_scoring.dart": "TicTacToeScoring",
+    "lib/services/tic_tac_toe_runner.dart": "TicTacToeRunner",
+    "lib/repositories/result_repository.dart": "ResultRepository (abstract interface)",
+    "lib/repositories/local_result_repository.dart": "LocalResultRepository (SharedPreferences, max 20 results per challenge)",
+    "lib/repositories/supabase_competition_repository.dart": "SupabaseCompetitionRepository",
+    "lib/repositories/supabase_result_repository.dart": "SupabaseResultRepository",
+    "lib/providers/player_provider.dart": "PlayerProvider",
+    "lib/providers/auth_provider.dart": "AuthProvider",
+    "lib/providers/challenge_provider.dart": "ChallengeProvider (+ GameState enum)",
+    "lib/providers/result_provider.dart": "ResultProvider",
+    "lib/providers/competition_provider.dart": "CompetitionProvider (+ WinnerNotification class)",
+    "lib/providers/mind_timer_provider.dart": "MindTimerProvider (+ MindTimerState enum)",
+    "lib/providers/pair_hunt_provider.dart": "PairHuntProvider (+ PairHuntState enum)",
+    "lib/providers/tic_tac_toe_provider.dart": "TicTacToeProvider (+ TicTacToeState enum)",
+    "lib/screens/splash_screen.dart": "SplashScreen",
+    "lib/screens/home_screen.dart": "HomeScreen",
+    "lib/screens/login_screen.dart": "LoginScreen",
+    "lib/screens/challenge_list_screen.dart": "ChallengeListScreen",
+    "lib/screens/game_screen.dart": "GameScreen (math)",
+    "lib/screens/mind_timer_game_screen.dart": "MindTimerGameScreen",
+    "lib/screens/pair_hunt_game_screen.dart": "PairHuntGameScreen",
+    "lib/screens/tic_tac_toe_game_screen.dart": "TicTacToeGameScreen",
+    "lib/screens/result_screen.dart": "ResultScreen",
+    "lib/screens/history_screen.dart": "HistoryScreen",
+    "lib/screens/profile_screen.dart": "ProfileScreen",
+    "lib/screens/competitions_screen.dart": "CompetitionsScreen",
+    "lib/screens/competition_detail_screen.dart": "CompetitionDetailScreen",
+    "lib/screens/admin/admin_dashboard_screen.dart": "AdminDashboardScreen",
+    "lib/screens/admin/admin_competitions_screen.dart": "AdminCompetitionsScreen",
+    "lib/widgets/answer_button.dart": "AnswerButton",
+    "lib/widgets/score_display.dart": "ScoreDisplay",
+    "lib/widgets/timer_bar.dart": "TimerBar",
+    "lib/platform/telegram_init.dart": "Conditional export for Telegram bridge",
+    "lib/platform/telegram_init_io.dart": "Telegram init stub (non-web)",
+    "lib/platform/telegram_init_web.dart": "Telegram init web implementation",
+    "lib/utils/clear_app_cache.dart": "Conditional export for cache clearing",
+    "lib/utils/web_cache_stub.dart": "No-op cache clearer (non-web)",
+    "lib/utils/web_cache_web.dart": "Web cache clearing (service workers, Cache Storage, IndexedDB, localStorage)"
+  },
+  "models": {
+    "ChallengeType": {
+      "kind": "enum",
+      "values": {
+        "math": "Arithmetic questions (addition)",
+        "mindTimer": "Hidden timer challenge",
+        "pairHunt": "Memory card matching game",
+        "ticTacToe": "3 rounds vs AI"
+      },
+      "from_string": "ChallengeType.fromString(String)"
+    },
+    "ChallengeDefinition": {
+      "kind": "class",
+      "type": "immutable, const",
+      "role": "Defines parameters for a challenge/game session. Union-like discriminator via challengeType.",
+      "fields": {
+        "id": "String (unique ID)",
+        "name": "String (display name)",
+        "description": "String",
+        "operation": "String (e.g. '+', 'mind_timer', 'pair_hunt', 'tic_tac_toe')",
+        "challengeType": "ChallengeType (default: math)",
+        "questionCount": "int (default 10, for math/mind_timer)",
+        "minNumber": "int (default 1, for math)",
+        "maxNumber": "int (default 10, for math)",
+        "timePerQuestionSeconds": "int (default 5, for math)",
+        "targetSeconds": "double (default 5.0, for mind_timer)",
+        "rangeSeconds": "double (default 2.0, for mind_timer tolerance)",
+        "maxPoints": "int (default 1000, for mind_timer/tic_tac_toe per round)",
+        "blockCount": "int (default 12, always even, for pair_hunt)",
+        "timeLimitSeconds": "int (default 60, for pair_hunt game / tic_tac_toe round)",
+        "pointsPerPair": "int (default 100, for pair_hunt)",
+        "maxTimeBonus": "int (default 500, for pair_hunt early finish)",
+        "penaltyPerMismatch": "int (default 25, for pair_hunt wrong attempt)"
+      },
+      "getters": ["bool isMath", "bool isMindTimer", "bool isPairHunt", "bool isTicTacToe", "int pairCount (blockCount ~/ 2)"],
+      "serialization": ["ChallengeDefinition.fromJson(Map)", "toJson() → Map", "static listFromJson(String) → List<ChallengeDefinition>"]
+    },
+    "CompetitionStatus": {
+      "kind": "enum",
+      "values": ["upcoming", "active", "finished"],
+      "from_string": "CompetitionStatus.fromString(String)"
+    },
+    "Competition": {
+      "kind": "class",
+      "role": "Online competition with entry fees, prize pool, and leaderboard",
+      "fields": {
+        "id": "String",
+        "name": "String",
+        "description": "String",
+        "startDate": "DateTime",
+        "endDate": "DateTime",
+        "challenges": "List<ChallengeDefinition>",
+        "entryPoints": "int (entry fee)",
+        "prizePool": "int",
+        "winnerCount": "int",
+        "winnerShares": "List<double>",
+        "status": "CompetitionStatus",
+        "createdAt": "DateTime"
+      },
+      "getters": ["bool hasStarted", "bool hasEnded", "bool isJoinable", "bool isActive", "CompetitionStatus effectiveStatus", "Duration timeRemaining"],
+      "serialization": ["Competition.fromJson(Map)"]
+    },
+    "Participant": {
+      "kind": "class",
+      "fields": {
+        "competitionId": "String",
+        "userId": "String",
+        "totalScore": "int",
+        "completedChallenges": "int",
+        "joinedAt": "DateTime"
+      },
+      "serialization": ["Participant.fromJson(Map)"]
+    },
+    "LeaderboardEntry": {
+      "kind": "class",
+      "fields": {
+        "userId": "String",
+        "nickname": "String",
+        "telegramUsername": "String?",
+        "totalScore": "int",
+        "completedChallenges": "int",
+        "rank": "int",
+        "prize": "int"
+      },
+      "serialization": ["LeaderboardEntry.fromJson(Map) — extracts nested profiles data"]
+    },
+    "PlayerData": {
+      "kind": "class",
+      "type": "mutable",
+      "role": "Local player identity (nickname, uid)",
+      "fields": {
+        "nickname": "String",
+        "uid": "String"
+      },
+      "serialization": ["fromJson(Map)", "toJson() → Map"]
+    },
+    "Question": {
+      "kind": "class",
+      "type": "immutable",
+      "role": "Math question with three answer options",
+      "fields": {
+        "num1": "int",
+        "num2": "int",
+        "correctAnswer": "int",
+        "options": "List<int> (length 3, shuffled)"
+      }
+    },
+    "QuestionResult": {
+      "kind": "class",
+      "role": "Per-question math result",
+      "fields": {
+        "isCorrect": "bool",
+        "responseTimeMs": "int"
+      },
+      "serialization": ["toJson()", "fromJson(Map)"]
+    },
+    "MindTimerQuestion": {
+      "kind": "class",
+      "role": "Mind timer round parameters",
+      "fields": {
+        "targetSeconds": "double",
+        "rangeSeconds": "double",
+        "maxPoints": "int"
+      }
+    },
+    "MindTimerResult": {
+      "kind": "class",
+      "role": "Per-round mind timer result",
+      "fields": {
+        "actualSeconds": "double",
+        "absoluteDifference": "double",
+        "points": "int",
+        "accuracy": "double (0.0–1.0)",
+        "rangeSeconds": "double"
+      },
+      "getters": ["bool isWithinRange"]
+    },
+    "PairHuntBlock": {
+      "kind": "class",
+      "type": "mutable",
+      "role": "A single card in the memory grid",
+      "fields": {
+        "emoji": "String (65 emoji pool: Animals, Food, Objects, Faces, Nature)",
+        "index": "int",
+        "isRevealed": "bool (default false)",
+        "isMatched": "bool (default false)"
+      }
+    },
+    "PairHuntGameResult": {
+      "kind": "class",
+      "role": "Final pair hunt game result",
+      "fields": {
+        "score": "int",
+        "pairsFound": "int",
+        "totalPairs": "int",
+        "mismatchCount": "int",
+        "timeTakenSeconds": "double",
+        "timeLimitSeconds": "double"
+      },
+      "getters": ["bool allPairsFound"]
+    },
+    "TicTacToeMark": {
+      "kind": "enum",
+      "values": ["none", "player", "ai"]
+    },
+    "TicTacToeDifficulty": {
+      "kind": "enum",
+      "type": "string-backed",
+      "values": {
+        "easy": "Random empty cell",
+        "medium": "Win-block-random heuristic",
+        "hard": "Minimax with 15% slip chance"
+      },
+      "from_string": "TicTacToeDifficulty.fromString(String)"
+    },
+    "TicTacToeRoundOutcome": {
+      "kind": "enum",
+      "values": ["win", "loss", "draw", "timeout"]
+    },
+    "TicTacToeRoundResult": {
+      "kind": "class",
+      "role": "Per-round tic-tac-toe result",
+      "fields": {
+        "roundNumber": "int",
+        "difficulty": "TicTacToeDifficulty",
+        "outcome": "TicTacToeRoundOutcome",
+        "score": "int",
+        "remainingMs": "int",
+        "timeLimitMs": "int"
+      },
+      "getters": ["bool isWin", "bool isDraw", "int elapsedMs"]
+    },
+    "Result": {
+      "kind": "class",
+      "role": "Universal persisted game result across all challenge types",
+      "fields": {
+        "challengeId": "String",
+        "score": "int",
+        "correctCount": "int",
+        "totalResponseTimeMs": "int (total game elapsed ms)",
+        "date": "DateTime",
+        "playerName": "String",
+        "withinRangeCount": "int? (mind timer only)",
+        "averageAccuracy": "double? (mind timer only)",
+        "isMindTimer": "bool (default false)",
+        "isPairHunt": "bool (default false)",
+        "pairsFound": "int? (pair hunt only)",
+        "totalPairs": "int? (pair hunt only)",
+        "mismatchCount": "int? (pair hunt only)",
+        "isTicTacToe": "bool (default false)",
+        "roundsWon": "int? (tic-tac-toe only)",
+        "roundsDrawn": "int? (tic-tac-toe only)",
+        "totalRounds": "int? (tic-tac-toe only)"
+      },
+      "getters": ["double averageTimeSeconds"],
+      "serialization": ["fromJson(Map)", "toJson() → Map", "static listFromJson(String) → List<Result>", "static listToJson(List<Result>) → String"]
+    }
+  },
+  "services": {
+    "QuestionGenerator": {
+      "file": "services/question_generator.dart",
+      "role": "Generates random math questions",
+      "constructor": "QuestionGenerator({Random? random})",
+      "methods": {
+        "generate": "Question generate(ChallengeDefinition challenge) — creates question from min/max, computes correctAnswer via operation switch, generates 2 decoys, shuffles 3 options"
+      }
+    },
+    "ScoreCalculator": {
+      "file": "services/score_calculator.dart",
+      "role": "Math challenge scoring (all static)",
+      "methods": {
+        "calculateForQuestion": "static int calculateForQuestion(int remainingTimeMs, int totalTimePerQuestionMs) — 100 + remainingSeconds*20, min 10",
+        "calculateTotal": "static int calculateTotal(List<QuestionResult> results, int totalTimePerQuestionMs) — sums + 200 perfect bonus"
+      }
+    },
+    "ChallengeRunner": {
+      "file": "services/challenge_runner.dart",
+      "role": "Orchestrates a math challenge session",
+      "dependencies": ["QuestionGenerator"],
+      "state_fields": ["_challengeDefinition", "_questions (List<Question>)", "_results (List<QuestionResult>)", "_currentIndex"],
+      "getters": ["isActive", "isFinished", "currentIndex", "totalQuestions", "correctCount", "challengeDefinition"],
+      "methods": {
+        "startChallenge": "void startChallenge(ChallengeDefinition) — pre-generates all questions",
+        "getCurrentQuestion": "Question? getCurrentQuestion()",
+        "answerSelected": "bool answerSelected(int selectedValue, int elapsedMs) — records result, advances",
+        "recordTimeout": "void recordTimeout()",
+        "getFinalResult": "Result getFinalResult(PlayerData player) — uses ScoreCalculator"
+      }
+    },
+    "MindTimerScoring": {
+      "file": "services/mind_timer_scoring.dart",
+      "role": "Mind timer scoring (all static)",
+      "methods": {
+        "calculate": "static MindTimerResult calculate({actualSeconds, targetSeconds, rangeSeconds, maxPoints}) — accuracy = 1 - diff/range, points = round(maxPoints * accuracy), 0 if out of range",
+        "calculateTotal": "static int calculateTotal(List<MindTimerResult>)",
+        "feedbackLabel": "static String feedbackLabel(double accuracy) → perfect/amazing/great/close/almost/far/miss"
+      }
+    },
+    "MindTimerRunner": {
+      "file": "services/mind_timer_runner.dart",
+      "role": "Orchestrates a mind timer session",
+      "dependencies": ["MindTimerScoring"],
+      "getters": ["isActive", "isFinished", "currentIndex", "totalQuestions", "withinRangeCount", "totalScore", "challengeDefinition"],
+      "methods": {
+        "startChallenge": "void startChallenge(ChallengeDefinition) — validates isMindTimer",
+        "getCurrentQuestion": "MindTimerQuestion? getCurrentQuestion()",
+        "recordStop": "MindTimerResult recordStop(double actualSeconds)",
+        "getFinalResult": "Result getFinalResult(PlayerData player)"
+      }
+    },
+    "PairHuntScoring": {
+      "file": "services/pair_hunt_scoring.dart",
+      "role": "Pair hunt scoring (all static)",
+      "methods": {
+        "calculate": "static PairHuntGameResult calculate({pairsFound, totalPairs, mismatchCount, timeTakenSeconds, timeLimitSeconds, pointsPerPair, maxTimeBonus, penaltyPerMismatch}) — basePoints + timeBonus - penalties, min 0"
+      }
+    },
+    "PairHuntRunner": {
+      "file": "services/pair_hunt_runner.dart",
+      "role": "Orchestrates a pair hunt (memory game) session",
+      "dependencies": ["PairHuntScoring"],
+      "has_emoji_pool": "65 distinct emojis across Animals, Food, Objects, Faces, Nature",
+      "getters": ["isStarted", "isFinished", "blocks (List<PairHuntBlock>)", "pairsFound", "totalPairs", "mismatchCount", "challengeDefinition", "allPairsFound", "revealedIndices"],
+      "methods": {
+        "startGame": "void startGame(ChallengeDefinition) — validates isPairHunt, generates grid",
+        "canFlip": "bool canFlip(int index)",
+        "flipBlock": "void flipBlock(int index)",
+        "checkMatch": "bool? checkMatch() — true=match, false=mismatch, null=waiting",
+        "markMatch": "void markMatch() — increments pairsFound",
+        "resetMismatch": "void resetMismatch() — increments mismatchCount",
+        "endByTimeout": "void endByTimeout()",
+        "getFinalGameResult": "PairHuntGameResult getFinalGameResult(double timeTakenSeconds)",
+        "getFinalResult": "Result getFinalResult(PlayerData player, double timeTakenSeconds)"
+      }
+    },
+    "TicTacToeBoard": {
+      "file": "services/tic_tac_toe_ai.dart",
+      "role": "Static board utilities for tic-tac-toe",
+      "constants": ["cellCount = 9", "winningLines (8 lines of 3 indices)"],
+      "methods": {
+        "empty": "static List<TicTacToeMark> empty()",
+        "availableCells": "static List<int> availableCells(List<TicTacToeMark> board)",
+        "isFull": "static bool isFull(List<TicTacToeMark> board)",
+        "findWinner": "static TicTacToeMark? findWinner(List<TicTacToeMark> board)",
+        "findWinningLine": "static List<int>? findWinningLine(List<TicTacToeMark> board)"
+      }
+    },
+    "TicTacToeAi": {
+      "file": "services/tic_tac_toe_ai.dart",
+      "role": "AI opponent with 3 difficulty levels",
+      "constants": ["hardSlipChance = 0.15"],
+      "constructor": "TicTacToeAi({Random? random})",
+      "methods": {
+        "chooseMove": "int chooseMove(List<TicTacToeMark> board, TicTacToeDifficulty difficulty) — dispatches to _easyMove, _mediumMove, _hardMove",
+        "_easyMove": "Random empty cell",
+        "_mediumMove": "Win-block-random priority heuristic",
+        "_hardMove": "Minimax with 15% slip chance (reverts to random)"
+      }
+    },
+    "TicTacToeScoring": {
+      "file": "services/tic_tac_toe_scoring.dart",
+      "role": "Tic-tac-toe scoring (all static)",
+      "methods": {
+        "calculateRoundScore": "static int calculateRoundScore({outcome, remainingMs, timeLimitMs, maxPoints}) — win: round(maxPoints * remainingMs/timeLimitMs), min 10% of maxPoints. Loss/draw/timeout: 0",
+        "calculateFinalScore": "static int calculateFinalScore(List<TicTacToeRoundResult>) — average of round scores"
+      }
+    },
+    "TicTacToeRunner": {
+      "file": "services/tic_tac_toe_runner.dart",
+      "role": "Orchestrates a 3-round tic-tac-toe session",
+      "dependencies": ["TicTacToeAi", "TicTacToeScoring", "TicTacToeBoard"],
+      "constants": ["roundsPerChallenge = 3", "roundDifficulties = [easy, medium, hard]"],
+      "getters": ["challengeDefinition", "board (List<TicTacToeMark>)", "results (unmodifiable List<TicTacToeRoundResult>)", "currentRoundNumber", "currentDifficulty", "isFinished", "roundsWon", "roundsDrawn", "finalScore", "totalRoundScore", "winningLine"],
+      "methods": {
+        "startChallenge": "void startChallenge(ChallengeDefinition) — validates isTicTacToe",
+        "startRound": "void startRound()",
+        "canPlaceAt": "bool canPlaceAt(int index)",
+        "placePlayerMark": "void placePlayerMark(int index)",
+        "placeAiMark": "int placeAiMark() — returns chosen cell index",
+        "findWinner": "TicTacToeMark? findWinner()",
+        "isBoardFull": "bool get isBoardFull",
+        "recordRoundResult": "TicTacToeRoundResult recordRoundResult({outcome, remainingMs})",
+        "getFinalResult": "Result getFinalResult(PlayerData player)"
+      }
+    }
+  },
+  "repositories": {
+    "ResultRepository": {
+      "file": "repositories/result_repository.dart",
+      "kind": "abstract class (interface)",
+      "methods": {
+        "getResultsForChallenge": "Future<List<Result>> getResultsForChallenge(String challengeId)",
+        "saveResult": "Future<void> saveResult(Result result)",
+        "getHighScore": "Future<int> getHighScore(String challengeId)",
+        "clearHistory": "Future<void> clearHistory(String challengeId)"
+      }
+    },
+    "LocalResultRepository": {
+      "file": "repositories/local_result_repository.dart",
+      "implements": "ResultRepository",
+      "storage": "SharedPreferences, key prefix 'results_', max 20 results per challenge",
+      "methods": {
+        "getResultsForChallenge": "Future<List<Result>> — sorted newest first, deserialized from JSON",
+        "saveResult": "Future<void> — inserts, trims to max 20",
+        "getHighScore": "Future<int> — max score from stored results",
+        "clearHistory": "Future<void>"
+      }
+    },
+    "SupabaseCompetitionRepository": {
+      "file": "repositories/supabase_competition_repository.dart",
+      "role": "All competition-related Supabase operations",
+      "constructor": "SupabaseCompetitionRepository({SupabaseClient? client})",
+      "getters": ["String? get currentUserId"],
+      "methods": {
+        "getCompetitions": "Future<List<Competition>>",
+        "getCompetition": "Future<Competition?> getCompetition(String id)",
+        "hasJoined": "Future<bool> hasJoined(String competitionId)",
+        "joinCompetition": "Future<void> joinCompetition(String competitionId) — calls join_competition RPC",
+        "getMyParticipation": "Future<Participant?> getMyParticipation(String competitionId)",
+        "getLeaderboard": "Future<List<LeaderboardEntry>> getLeaderboard(String competitionId, {int limit=20}) — joins participants + profiles",
+        "getCompletedChallengeIds": "Future<Set<String>> getCompletedChallengeIds(String competitionId)",
+        "finalizeCompetition": "Future<List<Map<String, dynamic>>?> finalizeCompetition(String) — calls distribute_prizes RPC",
+        "getFinalLeaderboard": "Future<List<LeaderboardEntry>> getFinalLeaderboard(String, {int limit=20}) — calls get_final_leaderboard RPC",
+        "submitChallengeResult": "Future<void> submitChallengeResult({competitionId, result}) — inserts challenge_results + calls update_participant_score RPC"
+      }
+    },
+    "SupabaseResultRepository": {
+      "file": "repositories/supabase_result_repository.dart",
+      "implements": "ResultRepository",
+      "methods": {
+        "getResultsForChallenge": "Future<List<Result>> — from challenge_results table",
+        "saveResult": "Future<void> — inserts to challenge_results",
+        "saveCompetitionResult": "Future<void> saveCompetitionResult({competitionId, result}) — inserts + calls update_participant_score RPC",
+        "getHighScore": "Future<int> — max score from challenge_results",
+        "clearHistory": "Future<void> — deletes from challenge_results by user_id + challenge_id"
+      }
+    }
+  },
+  "providers": {
+    "PlayerProvider": {
+      "file": "providers/player_provider.dart",
+      "extends": "ChangeNotifier",
+      "grain": "Global (shared across all screens)",
+      "state": {
+        "playerData": "PlayerData (nickname, uid)"
+      },
+      "getters": ["playerData", "nickname", "uid", "hasUid"],
+      "methods": {
+        "setNickname": "Future<void> setNickname(String) — persists to SharedPreferences",
+        "setUid": "void setUid(String uid)",
+        "clearUid": "void clearUid()"
+      }
+    },
+    "AuthProvider": {
+      "file": "providers/auth_provider.dart",
+      "extends": "ChangeNotifier",
+      "grain": "Global",
+      "dependencies": ["SupabaseClient (onAuthStateChange listener)"],
+      "state": {
+        "isLoading": "bool",
+        "errorMessage": "String?",
+        "isAdmin": "bool",
+        "cachedProfile": "Map<String, dynamic>?"
+      },
+      "getters": ["currentUser", "isLoggedIn", "isLoading", "errorMessage", "userId", "isAdmin", "telegramFirstName", "telegramLastName", "telegramUsername", "telegramPhotoUrl", "displayName", "telegramFullName", "userEmail"],
+      "methods": {
+        "signInWithTelegram": "Future<bool> — reads Telegram initData from platform bridge, POSTs to edge function telegram-auth, signs in with email/password",
+        "signUpWithEmail": "Future<bool> signUpWithEmail({email, password, nickname})",
+        "signInWithEmail": "Future<bool> signInWithEmail({email, password})",
+        "signOut": "Future<void>",
+        "getProfile": "Future<Map<String, dynamic>?> — from profiles table",
+        "setNickname": "Future<void> setNickname(String) — updates profile",
+        "clearError": "void clearError()"
+      }
+    },
+    "ChallengeProvider": {
+      "file": "providers/challenge_provider.dart",
+      "extends": "ChangeNotifier",
+      "grain": "Per-session (for math challenges)",
+      "dependencies": ["ChallengeRunner", "ScoreCalculator"],
+      "enums": ["GameState: idle, waitingForOptions, playing, showingResult, finished"],
+      "state": {
+        "challenges": "List<ChallengeDefinition> (loaded from assets/data/challenges.json)",
+        "gameState": "GameState",
+        "timeLeftMs": "int",
+        "lastAnswerCorrect": "bool?",
+        "lastAnswerTimeout": "bool",
+        "lastCorrectAnswer": "int?",
+        "displayQuestion": "Question?",
+        "displayQuestionIndex": "int",
+        "finalResult": "Result?",
+        "isLoadingChallenges": "bool",
+        "loadError": "String?"
+      },
+      "getters": ["challenges", "gameState", "currentChallenge", "currentQuestion", "currentQuestionIndex", "totalQuestions", "timeLeftMs", "correctCount", "lastAnswerCorrect", "lastAnswerTimeout", "lastCorrectAnswer", "finalResult", "isLoadingChallenges", "loadError", "timerProgress (0.0–1.0)"],
+      "methods": {
+        "loadChallenges": "Future<void> — from assets/data/challenges.json",
+        "startChallenge": "void startChallenge(ChallengeDefinition)",
+        "answerQuestion": "void answerQuestion(int selectedValue)",
+        "finalizeResult": "Result finalizeResult(PlayerData player)",
+        "reset": "void reset()"
+      }
+    },
+    "ResultProvider": {
+      "file": "providers/result_provider.dart",
+      "extends": "ChangeNotifier",
+      "grain": "Global",
+      "dependencies": ["LocalResultRepository"],
+      "state": {
+        "resultsCache": "Map<String, List<Result>> (by challengeId)",
+        "highScoreCache": "Map<String, int> (by challengeId)"
+      },
+      "methods": {
+        "getResultsForChallenge": "Future<List<Result>> — cached",
+        "getHighScore": "Future<int> — cached",
+        "saveResult": "Future<void> — updates cache + notifies",
+        "clearHistory": "Future<void> — clears cache",
+        "isNewHighScore": "bool isNewHighScore(Result, int previousHighScore)"
+      }
+    },
+    "CompetitionProvider": {
+      "file": "providers/competition_provider.dart",
+      "extends": "ChangeNotifier",
+      "grain": "Global",
+      "dependencies": ["SupabaseCompetitionRepository"],
+      "nested_classes": ["WinnerNotification (competitionName, prize, rank)"],
+      "state": {
+        "competitions": "List<Competition>",
+        "leaderboardCache": "Map<String, List<LeaderboardEntry>>",
+        "participationCache": "Map<String, Participant>",
+        "joinedCache": "Set<String>",
+        "completedChallengesCache": "Map<String, Set<String>>",
+        "isLoadingCompetitions": "bool",
+        "isLoadingLeaderboard": "bool",
+        "errorMessage": "String?",
+        "selectedCompetition": "Competition?",
+        "winnerNotifications": "List<WinnerNotification>"
+      },
+      "getters": ["competitions", "selectedCompetition", "isLoadingCompetitions", "isLoadingLeaderboard", "errorMessage", "winnerNotifications"],
+      "methods": {
+        "loadCompetitions": "Future<void> — auto-finalizes ended competitions, checks for winner notifications",
+        "selectCompetition": "Future<void> selectCompetition(Competition) — loads leaderboard",
+        "hasJoinedCompetition": "Future<bool>",
+        "joinCompetition": "Future<void>",
+        "getLeaderboard": "Future<List<LeaderboardEntry>> getLeaderboard(String, {forceRefresh})",
+        "cachedLeaderboard": "List<LeaderboardEntry> cachedLeaderboard(String)",
+        "getMyParticipation": "Future<Participant?>",
+        "getCompletedChallengeIds": "Future<Set<String>>",
+        "submitChallengeResult": "Future<bool> submitChallengeResult(Result)",
+        "getMyFinalResult": "Future<(int, int)?> — returns (rank, prize)",
+        "clearError": "void",
+        "clearSelection": "void",
+        "dismissWinnerNotification": "void dismissWinnerNotification(int)",
+        "clearWinnerNotifications": "void"
+      }
+    },
+    "MindTimerProvider": {
+      "file": "providers/mind_timer_provider.dart",
+      "extends": "ChangeNotifier",
+      "grain": "Per-session",
+      "dependencies": ["MindTimerRunner", "MindTimerScoring"],
+      "enums": ["MindTimerState: ready, counting, showingResult, finished"],
+      "state": {
+        "state": "MindTimerState",
+        "lastResult": "MindTimerResult?",
+        "finalResult": "Result?",
+        "questionIndex": "int",
+        "totalQuestions": "int",
+        "stopwatch": "Stopwatch",
+        "displayTick": "Timer?"
+      },
+      "getters": ["state", "lastResult", "finalResult", "questionIndex", "totalQuestions", "runningScore", "currentChallenge", "currentQuestion", "elapsedSeconds"],
+      "methods": {
+        "startChallenge": "void startChallenge(ChallengeDefinition) — validates isMindTimer",
+        "startCounting": "void startCounting()",
+        "stopCounting": "void stopCounting() — records result, auto-advances after 2.5s",
+        "finalizeResult": "Result finalizeResult(PlayerData)",
+        "reset": "void reset()"
+      }
+    },
+    "PairHuntProvider": {
+      "file": "providers/pair_hunt_provider.dart",
+      "extends": "ChangeNotifier",
+      "grain": "Per-session",
+      "dependencies": ["PairHuntRunner", "PairHuntScoring"],
+      "enums": ["PairHuntState: intro, playing, showingMismatch, finished"],
+      "state": {
+        "state": "PairHuntState",
+        "timeRemainingSeconds": "int",
+        "totalTimeSeconds": "int",
+        "pairsFound": "int",
+        "mismatchCount": "int",
+        "totalPairs": "int",
+        "revealedIndices": "Set<int>",
+        "matchedIndices": "Set<int>",
+        "isLocked": "bool",
+        "gameResult": "PairHuntGameResult?",
+        "finalResult": "Result?",
+        "gameTimer": "Timer?",
+        "mismatchTimer": "Timer?",
+        "stopwatch": "Stopwatch"
+      },
+      "getters": ["state", "timeRemainingSeconds", "totalTimeSeconds", "pairsFound", "mismatchCount", "totalPairs", "revealedIndices", "matchedIndices", "isLocked", "gameResult", "finalResult", "currentChallenge", "blocks", "isShowingMismatch", "timerProgress (0.0–1.0)"],
+      "methods": {
+        "startChallenge": "void startChallenge(ChallengeDefinition) — validates isPairHunt",
+        "startPlaying": "void startPlaying() — starts countdown timer",
+        "tapBlock": "void tapBlock(int index) — flips card, checks match/mismatch",
+        "finalizeResult": "Result finalizeResult(PlayerData)",
+        "reset": "void reset()"
+      }
+    },
+    "TicTacToeProvider": {
+      "file": "providers/tic_tac_toe_provider.dart",
+      "extends": "ChangeNotifier",
+      "grain": "Per-session",
+      "dependencies": ["TicTacToeRunner", "TicTacToeAi", "TicTacToeScoring"],
+      "enums": ["TicTacToeState: intro, playerTurn, aiThinking, showingRoundResult, finished"],
+      "constants": {
+        "tickIntervalMs": 100,
+        "aiThinkMinMs": 400,
+        "aiThinkExtraMs": 400,
+        "roundResultDurationMs": 2200
+      },
+      "state": {
+        "state": "TicTacToeState",
+        "remainingMs": "int",
+        "timeLimitMs": "int",
+        "lastRoundResult": "TicTacToeRoundResult?",
+        "winningLine": "List<int>?",
+        "lastAiMoveIndex": "int?",
+        "finalResult": "Result?",
+        "tickTimer": "Timer?",
+        "aiTimer": "Timer?",
+        "roundEndTimer": "Timer?"
+      },
+      "getters": ["state", "remainingMs", "remainingSeconds", "timeLimitMs", "board", "currentRoundNumber", "totalRounds", "currentDifficulty", "roundResults", "lastRoundResult", "winningLine", "lastAiMoveIndex", "totalRoundScore", "finalScore", "finalResult", "currentChallenge", "isPlayerTurn", "isAiThinking", "timerProgress"],
+      "methods": {
+        "startChallenge": "void startChallenge(ChallengeDefinition) — validates isTicTacToe",
+        "startPlaying": "void startPlaying()",
+        "tapCell": "void tapCell(int index) — player move, triggers AI after delay",
+        "finalizeResult": "Result finalizeResult(PlayerData)",
+        "reset": "void reset()"
+      }
+    }
+  },
+  "screens": {
+    "SplashScreen": {
+      "file": "screens/splash_screen.dart",
+      "route": "Initial screen (MaterialApp.home)",
+      "providers_used": [],
+      "behavior": "Shows logo + version with fade-in/scale animation for 2s, then pushReplacement to HomeScreen"
+    },
+    "HomeScreen": {
+      "file": "screens/home_screen.dart",
+      "route": "Navigated from SplashScreen",
+      "providers_used": ["PlayerProvider", "AuthProvider", "CompetitionProvider"],
+      "key_behaviors": [
+        "Auto-auth: polls for Telegram initData up to 50 times (5s), auto-signs in if Telegram WebApp",
+        "Shows Telegram/Email user banner when logged in",
+        "Shows winner prize notifications from CompetitionProvider",
+        "Warm Up button → ChallengeListScreen",
+        "Competitions button (auth required) → CompetitionsScreen",
+        "Sign In / Sign Up button (not logged in) → LoginScreen",
+        "Admin panel button (if auth.isAdmin) → AdminDashboardScreen",
+        "Offline nickname field (when not logged in)"
+      ]
+    },
+    "LoginScreen": {
+      "file": "screens/login_screen.dart",
+      "route": "Navigated from HomeScreen",
+      "providers_used": ["AuthProvider", "PlayerProvider"],
+      "behavior": "Tab-based Sign In / Sign Up with email+password. On success: sets UID, syncs nickname, pops with true."
+    },
+    "ChallengeListScreen": {
+      "file": "screens/challenge_list_screen.dart",
+      "route": "Navigated from HomeScreen",
+      "providers_used": ["ChallengeProvider", "ResultProvider"],
+      "props": "none (reads from providers)",
+      "behavior": "Shows all challenges as cards with name, description, best score, Play button. Routes to correct game screen based on challenge type (math → GameScreen, mind_timer → MindTimerGameScreen, pair_hunt → PairHuntGameScreen, tic_tac_toe → TicTacToeGameScreen). History button → HistoryScreen."
+    },
+    "GameScreen": {
+      "file": "screens/game_screen.dart",
+      "route": "Navigated from ChallengeListScreen or CompetitionDetailScreen",
+      "providers_used": ["ChallengeProvider", "PlayerProvider", "ResultProvider"],
+      "props": ["challenge (ChallengeDefinition)", "competitionId (String?)"],
+      "behavior": "Math challenge gameplay: instruction view → number boxes + answer buttons + timer bar + correct/wrong/timeout feedback animations. On finish: navigates to ResultScreen (or pops with result map for competition mode)."
+    },
+    "MindTimerGameScreen": {
+      "file": "screens/mind_timer_game_screen.dart",
+      "route": "Navigated from ChallengeListScreen or CompetitionDetailScreen",
+      "providers_used": ["MindTimerProvider", "PlayerProvider", "ResultProvider"],
+      "props": ["challenge (ChallengeDefinition)", "competitionId (String?)"],
+      "behavior": "Three per-round states: Ready (target + Start with pulsing animation), Counting (hidden timer + Stop button), Result (actual time, points, accuracy bar, feedback label). Exit confirmation. → ResultScreen."
+    },
+    "PairHuntGameScreen": {
+      "file": "screens/pair_hunt_game_screen.dart",
+      "route": "Navigated from ChallengeListScreen or CompetitionDetailScreen",
+      "providers_used": ["PairHuntProvider", "PlayerProvider", "ResultProvider"],
+      "props": ["challenge (ChallengeDefinition)", "competitionId (String?)"],
+      "behavior": "Intro: game info cards + How to Play + Start. Game: responsive grid of emoji cards with flip animation, timer bar, progress, mismatch count. → ResultScreen."
+    },
+    "TicTacToeGameScreen": {
+      "file": "screens/tic_tac_toe_game_screen.dart",
+      "route": "Navigated from ChallengeListScreen or CompetitionDetailScreen",
+      "providers_used": ["TicTacToeProvider", "PlayerProvider", "ResultProvider"],
+      "props": ["challenge (ChallengeDefinition)", "competitionId (String?)"],
+      "behavior": "Intro: rounds info, time per round, max points, How to Play. Game: round header (N/3, difficulty chip, score), timer bar, turn indicator, 3x3 board. Round result overlay: win/loss/draw/timeout banner with points. → ResultScreen."
+    },
+    "ResultScreen": {
+      "file": "screens/result_screen.dart",
+      "route": "Navigated from any game screen",
+      "providers_used": ["ResultProvider", "ChallengeProvider", "MindTimerProvider", "PairHuntProvider", "TicTacToeProvider", "CompetitionProvider"],
+      "props": ["result (Result)", "challenge (ChallengeDefinition)", "competitionId (String?)"],
+      "behavior": "Final score card with type-specific stats (math: correct/avg time/total time; mind timer: within range/accuracy; pair hunt: pairs/mismatches/time; tic-tac-toe: wins/draws). Competition mode: auto-submits result. High score badge (offline only). Play Again (offline) / Back to Competition buttons."
+    },
+    "HistoryScreen": {
+      "file": "screens/history_screen.dart",
+      "route": "Navigated from ChallengeListScreen",
+      "providers_used": ["ResultProvider"],
+      "props": ["challengeId (String)", "challengeName (String)"],
+      "behavior": "List of past results for a challenge, sorted newest first. Each card: rank/best badge, score, type-specific stats, time info. Clear-history dialog."
+    },
+    "ProfileScreen": {
+      "file": "screens/profile_screen.dart",
+      "route": "Navigated from HomeScreen",
+      "providers_used": ["AuthProvider", "PlayerProvider"],
+      "behavior": "Avatar, Telegram info, editable nickname, coins balance (from auth.getProfile()), web cache clear button (kIsWeb only), admin panel link, app version."
+    },
+    "CompetitionsScreen": {
+      "file": "screens/competitions_screen.dart",
+      "route": "Navigated from HomeScreen",
+      "providers_used": ["CompetitionProvider", "AuthProvider"],
+      "guard": "Redirects to HomeScreen if not logged in",
+      "behavior": "Two tabs: Live (upcoming+active) and Ended (finished). Pull-to-refresh. Each card shows: status badge, name, description, time remaining, challenge count, entry coins, prize pool, winners, shares, progress bar, action button."
+    },
+    "CompetitionDetailScreen": {
+      "file": "screens/competition_detail_screen.dart",
+      "route": "Navigated from CompetitionsScreen",
+      "providers_used": ["CompetitionProvider", "AuthProvider"],
+      "props": ["competition (Competition)"],
+      "behavior": "Header: stat badges, live time remaining (ticks every 1s). Tab 1 (Challenges): challenge list with played/playable states, join button. Tab 2 (Leaderboard): realtime leaderboard via Supabase Realtime channel (participants table changes) or final leaderboard for ended competitions with podium. Challenge result flow loops back. Realtime subscription management."
+    },
+    "AdminDashboardScreen": {
+      "file": "screens/admin/admin_dashboard_screen.dart",
+      "route": "Navigated from HomeScreen",
+      "providers_used": ["AuthProvider"],
+      "guard": "auth.isAdmin, shows access-denied if not",
+      "behavior": "Admin cards listing — currently only Competitions card → AdminCompetitionsScreen"
+    },
+    "AdminCompetitionsScreen": {
+      "file": "screens/admin/admin_competitions_screen.dart",
+      "route": "Navigated from AdminDashboardScreen",
+      "providers_used": [],
+      "uses_directly": "Supabase.instance.client",
+      "behavior": "Lists competitions with edit/delete menu. Create/Edit form with: custom numeric fields (no keyboard), challenge type picker (math/mind_timer/pair_hunt/tic_tac_toe), type-specific fields, date/time pickers, dynamic winner shares."
+    }
+  },
+  "widgets": {
+    "AnswerButton": {
+      "file": "widgets/answer_button.dart",
+      "kind": "StatelessWidget",
+      "props": ["int value", "VoidCallback? onTap", "bool isDisabled", "Color? backgroundColor"],
+      "renders": "90x90 tappable container with answer value text"
+    },
+    "ScoreDisplay": {
+      "file": "widgets/score_display.dart",
+      "kind": "StatelessWidget",
+      "props": ["int score", "int correctCount", "int totalQuestions"],
+      "renders": "Row with star (score) and check_circle (correct/total) chips"
+    },
+    "TimerBar": {
+      "file": "widgets/timer_bar.dart",
+      "kind": "StatelessWidget",
+      "props": ["double progress (0.0–1.0)", "double height"],
+      "renders": "Colored LinearProgressIndicator: green (>66%), orange (>33%), red (<=33%)"
+    }
+  },
+  "routing": {
+    "routes": [
+      {
+        "from": "SplashScreen",
+        "to": "HomeScreen",
+        "method": "pushReplacement after 2s animation"
+      },
+      {
+        "from": "HomeScreen",
+        "to": "ChallengeListScreen",
+        "trigger": "Warm Up button"
+      },
+      {
+        "from": "HomeScreen",
+        "to": "CompetitionsScreen",
+        "trigger": "Competitions button (auth required)"
+      },
+      {
+        "from": "HomeScreen",
+        "to": "LoginScreen",
+        "trigger": "Sign In / Sign Up button (not logged in)"
+      },
+      {
+        "from": "HomeScreen",
+        "to": "ProfileScreen",
+        "trigger": "Profile button"
+      },
+      {
+        "from": "HomeScreen",
+        "to": "AdminDashboardScreen",
+        "trigger": "Admin button (auth.isAdmin)"
+      },
+      {
+        "from": "AdminDashboardScreen",
+        "to": "AdminCompetitionsScreen",
+        "trigger": "Competitions card"
+      },
+      {
+        "from": "ChallengeListScreen",
+        "to": "GameScreen | MindTimerGameScreen | PairHuntGameScreen | TicTacToeGameScreen",
+        "trigger": "Play button, dispatched by challenge type"
+      },
+      {
+        "from": "ChallengeListScreen",
+        "to": "HistoryScreen",
+        "trigger": "History button"
+      },
+      {
+        "from": "GameScreen | MindTimerGameScreen | PairHuntGameScreen | TicTacToeGameScreen",
+        "to": "ResultScreen",
+        "trigger": "Game finished"
+      },
+      {
+        "from": "CompetitionsScreen",
+        "to": "CompetitionDetailScreen",
+        "trigger": "Tap competition card"
+      },
+      {
+        "from": "CompetitionDetailScreen",
+        "to": "GameScreen | MindTimerGameScreen | PairHuntGameScreen | TicTacToeGameScreen",
+        "trigger": "Play challenge button"
+      }
+    ]
+  },
+  "provider_wiring": {
+    "file": "main.dart",
+    "setup": "MultiProvider wrapping MaterialApp",
+    "providers_global": [
+      "ChangeNotifierProvider(PlayerProvider)",
+      "ChangeNotifierProvider(ChallengeProvider)",
+      "ChangeNotifierProvider(ResultProvider)",
+      "ChangeNotifierProvider(AuthProvider)",
+      "ChangeNotifierProvider(CompetitionProvider)",
+      "ChangeNotifierProvider(MindTimerProvider)",
+      "ChangeNotifierProvider(PairHuntProvider)",
+      "ChangeNotifierProvider(TicTacToeProvider)"
+    ]
+  },
+  "challenge_types": {
+    "description": "Four challenge types share the Result model. Each has its own Runner (pure logic), Provider (state), GameScreen (UI), and Scoring (points). The ChallengeDefinition model acts as a discriminated union via challengeType field.",
+    "types": {
+      "math": {
+        "runner": "ChallengeRunner",
+        "provider": "ChallengeProvider",
+        "screen": "GameScreen",
+        "scoring": "ScoreCalculator",
+        "generator": "QuestionGenerator",
+        "flow": "Pre-generate Qs → show Q with 3 options → player taps → record result + advance → after all Qs → compute final score with perfect bonus"
+      },
+      "mind_timer": {
+        "runner": "MindTimerRunner",
+        "provider": "MindTimerProvider",
+        "screen": "MindTimerGameScreen",
+        "scoring": "MindTimerScoring",
+        "flow": "Show target time → player taps Start (hidden timer) → player taps Stop → compute accuracy + points → after all rounds → final result"
+      },
+      "pair_hunt": {
+        "runner": "PairHuntRunner",
+        "provider": "PairHuntProvider",
+        "screen": "PairHuntGameScreen",
+        "scoring": "PairHuntScoring",
+        "flow": "Generate emoji grid → player flips cards to find matches → countdown timer → match: reveal permanently, mismatch: flip back + penalty → game ends on all pairs found or timeout"
+      },
+      "tic_tac_toe": {
+        "runner": "TicTacToeRunner",
+        "provider": "TicTacToeProvider",
+        "screen": "TicTacToeGameScreen",
+        "scoring": "TicTacToeScoring",
+        "ai": "TicTacToeAi (easy/medium/hard minimax)",
+        "flow": "3 rounds (easy→medium→hard) → player places X → AI places O after delay → check winner/tie → score per round based on time remaining → final score = average"
+      }
+    }
+  },
+  "game_modes": {
+    "offline_warm_up": {
+      "description": "Local-only play. Results saved via LocalResultRepository (SharedPreferences, max 20 per challenge). No auth required.",
+      "data_flow": "Result → LocalResultRepository → SharedPreferences"
+    },
+    "online_competition": {
+      "description": "Auth required. Join competitions, play challenges, submit results to Supabase. Real-time leaderboard via RealtimeChannel.",
+      "data_flow": "Auth → join competition → play challenge → submit result → SupabaseCompetitionRepository → update_participant_score RPC → RealtimeChannel triggers leaderboard refresh"
+    }
+  }
+}

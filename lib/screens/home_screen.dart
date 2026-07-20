@@ -9,6 +9,7 @@ import 'challenge_list_screen.dart';
 import 'competitions_screen.dart';
 import 'login_screen.dart';
 import 'profile_screen.dart';
+import 'tg_home_screen.dart';
 import 'admin/admin_dashboard_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -90,9 +91,11 @@ class _HomeScreenState extends State<HomeScreen> {
       MaterialPageRoute(builder: (_) => const LoginScreen()),
     );
     if (result == true && mounted) {
-      // Sync nickname from Supabase profile
       await _syncNicknameIfLoggedIn();
-      setState(() {});
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const TgHomeScreen()),
+      );
     }
   }
 

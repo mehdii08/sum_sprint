@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/challenge_definition.dart';
 import '../models/question.dart';
 import '../models/result.dart';
@@ -62,15 +63,38 @@ class ChallengeProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final String jsonString =
-          await rootBundle.loadString('assets/data/challenges.json');
-      _challenges = ChallengeDefinition.listFromJson(jsonString);
+      final client = Supabase.instance.client;
+      final response = await client
+          .from('challenges')
+          .select()
+          .eq('is_active', true)
+          .order('display_order', ascending: true);
+
+      final list = response as List<dynamic>;
+      if (list.isNotEmpty) {
+        _challenges = list
+            .map((e) => ChallengeDefinition.fromJson(e as Map<String, dynamic>))
+            .toList();
+      } else {
+        await _loadFallback();
+      }
     } catch (e) {
-      _loadError = 'Failed to load challenges: $e';
+      debugPrint('[ChallengeProvider] Supabase load failed, using fallback: $e');
+      await _loadFallback();
     }
 
     _isLoadingChallenges = false;
     notifyListeners();
+  }
+
+  Future<void> _loadFallback() async {
+    try {
+      final String jsonString =
+          await rootBundle.loadString('assets/data/challenges.json');
+      _challenges = ChallengeDefinition.listFromJson(jsonString);
+    } catch (e) {
+      _loadError = 'Failed to load challenges';
+    }
   }
 
   void startChallenge(ChallengeDefinition challenge) {

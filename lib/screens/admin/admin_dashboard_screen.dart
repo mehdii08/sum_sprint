@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'admin_competitions_screen.dart';
+import 'admin_leaderboards_screen.dart';
+import 'admin_challenges_screen.dart';
 import '../../providers/auth_provider.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -48,6 +50,16 @@ class AdminDashboardScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           _Card(
+            icon: Icons.calculate_rounded,
+            title: 'Challenges',
+            subtitle: 'Manage challenges shown on the home screen',
+            color: const Color(0xFF1A237E),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AdminChallengesScreen()),
+            ),
+          ),
+          _Card(
             icon: Icons.emoji_events,
             title: l10n.adminCompetitions,
             subtitle: l10n.adminCompetitionsSubtitle,
@@ -55,6 +67,16 @@ class AdminDashboardScreen extends StatelessWidget {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const AdminCompetitionsScreen()),
+            ),
+          ),
+          _Card(
+            icon: Icons.leaderboard,
+            title: 'Custom Leaderboards',
+            subtitle: 'Manage time-based leaderboards with date ranges and rewards',
+            color: Colors.teal,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AdminLeaderboardsScreen()),
             ),
           ),
         ],

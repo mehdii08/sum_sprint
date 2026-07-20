@@ -7,23 +7,20 @@ import '../providers/player_provider.dart';
 import '../providers/result_provider.dart';
 import '../providers/pair_hunt_provider.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/app_theme.dart';
 import 'result_screen.dart';
 
-/// Game screen for Pair‑Hunt challenges.
-///
-/// Three visual states:
-///   1. **Intro** – challenge info + Start button
-///   2. **Playing** – grid of face-down blocks + countdown timer
-///   3. **Finished** – navigates to ResultScreen
+const _phAmber = Color(0xFFFF9800);
+const _phGold = Color(0xFFFFB300);
+const _phCyan = Color(0xFF00E5FF);
+const _phBrown = Color(0xFF1A1410);
+const _phCharcoal = Color(0xFF1E1E24);
+
 class PairHuntGameScreen extends StatefulWidget {
   final ChallengeDefinition challenge;
   final String? competitionId;
 
-  const PairHuntGameScreen({
-    super.key,
-    required this.challenge,
-    this.competitionId,
-  });
+  const PairHuntGameScreen({super.key, required this.challenge, this.competitionId});
 
   @override
   State<PairHuntGameScreen> createState() => _PairHuntGameScreenState();
@@ -35,9 +32,7 @@ class _PairHuntGameScreenState extends State<PairHuntGameScreen> {
   @override
   void initState() {
     super.initState();
-    Timer.run(() {
-      context.read<PairHuntProvider>().startChallenge(widget.challenge);
-    });
+    Timer.run(() => context.read<PairHuntProvider>().startChallenge(widget.challenge));
   }
 
   @override
@@ -49,73 +44,97 @@ class _PairHuntGameScreenState extends State<PairHuntGameScreen> {
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop) _showExitConfirmation(l10n);
       },
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(widget.challenge.name),
-          backgroundColor: const Color(0xFF1A237E),
-          foregroundColor: Colors.white,
-          leading: IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () => _showExitConfirmation(l10n),
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [_phBrown, Color(0xFF0D0F16)],
           ),
         ),
-        body: Consumer<PairHuntProvider>(
-          builder: (context, provider, _) {
-            if (provider.state == PairHuntState.finished) {
-              if (!_navigated) {
-                _navigated = true;
-                Timer.run(() => _navigateToResult(provider));
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            title: Text(widget.challenge.name,
+                style: const TextStyle(color: kTextPrimary, fontWeight: FontWeight.bold)),
+            backgroundColor: _phCharcoal,
+            foregroundColor: kTextPrimary,
+            elevation: 0,
+            leading: IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: kTextPrimary.withAlpha(10),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.close_rounded, color: kTextPrimary, size: 20),
+              ),
+              onPressed: () => _showExitConfirmation(l10n),
+            ),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _phAmber.withAlpha(25),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: _phAmber.withAlpha(50)),
+                    boxShadow: [BoxShadow(color: _phAmber.withAlpha(15), blurRadius: 8)],
+                  ),
+                  child: const Text('MEMORY',
+                      style: TextStyle(color: _phAmber, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.0)),
+                ),
+              ),
+            ],
+          ),
+          body: Consumer<PairHuntProvider>(
+            builder: (context, provider, _) {
+              if (provider.state == PairHuntState.finished) {
+                if (!_navigated) {
+                  _navigated = true;
+                  Timer.run(() => _navigateToResult(provider));
+                }
+                return const Center(child: CircularProgressIndicator(color: _phAmber));
               }
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            return SafeArea(
-              child: provider.state == PairHuntState.intro
-                  ? _buildIntroView(provider, l10n)
-                  : _buildGameView(provider, l10n),
-            );
-          },
-        ),
-        bottomNavigationBar: Consumer<PairHuntProvider>(
-          builder: (context, provider, _) {
-            if (provider.state != PairHuntState.intro) {
-              return const SizedBox.shrink();
-            }
-            return SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton.icon(
-                    onPressed: () => provider.startPlaying(),
-                    icon: const Icon(Icons.play_arrow, size: 28),
-                    label: Text(
-                      l10n.pairHuntStart,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+              return SafeArea(
+                child: provider.state == PairHuntState.intro
+                    ? _buildIntroView(provider, l10n)
+                    : _buildGameView(provider, l10n),
+              );
+            },
+          ),
+          bottomNavigationBar: Consumer<PairHuntProvider>(
+            builder: (context, provider, _) {
+              if (provider.state != PairHuntState.intro) return const SizedBox.shrink();
+              return SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton.icon(
+                      onPressed: () => provider.startPlaying(),
+                      icon: const Icon(Icons.play_arrow_rounded, size: 26),
+                      label: const Text('START GAME',
+                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: 1.2)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _phAmber,
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                        elevation: 0,
+                        shadowColor: _phAmber,
                       ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 4,
                     ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );
   }
-
-  // ── Intro view ───────────────────────────────────────────────────
 
   Widget _buildIntroView(PairHuntProvider provider, AppLocalizations l10n) {
     final challenge = widget.challenge;
@@ -123,107 +142,123 @@ class _PairHuntGameScreenState extends State<PairHuntGameScreen> {
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
       child: Column(
         children: [
-          const SizedBox(height: 8),
-          // Header icon
+          const SizedBox(height: 28),
           Container(
-            width: 80,
-            height: 80,
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.purple.withAlpha(25),
-              shape: BoxShape.circle,
+              color: _phCharcoal,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: _phAmber.withAlpha(30), width: 0.8),
+              boxShadow: [BoxShadow(color: _phAmber.withAlpha(12), blurRadius: 16)],
             ),
-            child: const Icon(
-              Icons.grid_view,
-              size: 40,
-              color: Colors.purple,
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _phAmber.withAlpha(15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text('Flip cards. Find matching pairs. Clear the board.',
+                      style: TextStyle(color: _phAmber, fontSize: 12, fontWeight: FontWeight.w600)),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: 240,
+                  height: 180,
+                  child: GridView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 4, mainAxisSpacing: 8, crossAxisSpacing: 8, childAspectRatio: 1.0),
+                    itemCount: 8,
+                    itemBuilder: (context, index) {
+                      final flipped = index == 2;
+                      final matched = index == 6;
+                      String? emoji;
+                      if (flipped && index == 2) emoji = '🔥';
+                      if (matched && index == 6) emoji = '⚡';
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: matched
+                              ? _phCyan.withAlpha(20)
+                              : flipped
+                                  ? _phCharcoal
+                                  : _phCharcoal,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: matched ? _phCyan.withAlpha(80) : flipped ? _phAmber.withAlpha(60) : kTextPrimary.withAlpha(10),
+                            width: matched ? 2 : 1,
+                          ),
+                          boxShadow: matched
+                              ? [BoxShadow(color: _phCyan.withAlpha(20), blurRadius: 8)]
+                              : flipped
+                                  ? [BoxShadow(color: _phAmber.withAlpha(20), blurRadius: 8)]
+                                  : null,
+                        ),
+                        child: Center(
+                          child: emoji != null
+                              ? Text(emoji, style: const TextStyle(fontSize: 24))
+                              : Icon(Icons.help_outline_rounded, color: kTextMuted.withAlpha(60), size: 22),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
-          // Challenge title
-          Text(
-            challenge.name,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1A237E),
-            ),
-          ),
+          const SizedBox(height: 24),
+          const Text('Match the pairs. Beat the clock.',
+              style: TextStyle(color: kTextPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          // Description
-          Text(
-            challenge.description,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
-          ),
+          const Text('Flip cards to find matching pairs.\nClear all pairs before time runs out!',
+              textAlign: TextAlign.center, style: TextStyle(color: kTextSecondary, fontSize: 13)),
+          const SizedBox(height: 20),
+          Wrap(spacing: 10, runSpacing: 10, children: [
+            _InfoPill(icon: Icons.grid_view_rounded, text: '${challenge.blockCount} Blocks', color: _phAmber),
+            _InfoPill(icon: Icons.timer_rounded, text: '${challenge.timeLimitSeconds}s', color: _phCyan),
+            _InfoPill(icon: Icons.star_rounded, text: '${challenge.maxPoints} Max', color: _phGold),
+          ]),
+          const SizedBox(height: 16),
+          _buildInfoRow(l10n.pairHuntPairs, '${challenge.pairCount} ${l10n.pairHuntPairsLabel}', Icons.grid_view_rounded),
+          const SizedBox(height: 8),
+          _buildInfoRow(l10n.pairHuntTimeLimit, l10n.pairHuntTimeLimitValue(challenge.timeLimitSeconds), Icons.timer_rounded),
+          const SizedBox(height: 8),
+          _buildInfoRow(l10n.pairHuntBlocks, '${challenge.blockCount}', Icons.extension_rounded),
           const SizedBox(height: 28),
-          // Game info cards
-          _buildInfoRow(
-            icon: Icons.grid_on,
-            label: l10n.pairHuntPairs,
-            value: '${challenge.pairCount} ${l10n.pairHuntPairsLabel}',
-          ),
-          const SizedBox(height: 12),
-          _buildInfoRow(
-            icon: Icons.timer,
-            label: l10n.pairHuntTimeLimit,
-            value: l10n.pairHuntTimeLimitValue(challenge.timeLimitSeconds),
-          ),
-          const SizedBox(height: 12),
-          _buildInfoRow(
-            icon: Icons.extension,
-            label: l10n.pairHuntBlocks,
-            value: '${challenge.blockCount}',
-          ),
-          const SizedBox(height: 28),
-          // "How to Play" section
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.purple.shade50,
-              borderRadius: BorderRadius.circular(16),
+              color: _phCharcoal,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: _phAmber.withAlpha(20)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    const Icon(Icons.info_outline,
-                        color: Color(0xFF1A237E), size: 22),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.pairHuntHowToPlay,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1A237E),
-                      ),
+                Row(children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(colors: [_phAmber, Color(0xFFE65100)]),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  ],
-                ),
+                    child: const Icon(Icons.info_outline_rounded, color: kTextPrimary, size: 18),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(l10n.pairHuntHowToPlay,
+                      style: const TextStyle(color: kTextPrimary, fontSize: 17, fontWeight: FontWeight.bold)),
+                ]),
                 const SizedBox(height: 16),
-                _InstructionRow(
-                  icon: Icons.touch_app,
-                  text: l10n.pairHuntRule1,
-                ),
-                const SizedBox(height: 12),
-                _InstructionRow(
-                  icon: Icons.swap_horiz,
-                  text: l10n.pairHuntRule2,
-                ),
-                const SizedBox(height: 12),
-                _InstructionRow(
-                  icon: Icons.emoji_emotions,
-                  text: l10n.pairHuntRule3,
-                ),
-                const SizedBox(height: 12),
-                _InstructionRow(
-                  icon: Icons.timer,
-                  text: l10n.pairHuntRule4(challenge.timeLimitSeconds),
-                ),
+                _InstructionRow(icon: Icons.touch_app_rounded, text: l10n.pairHuntRule1),
+                const SizedBox(height: 10),
+                _InstructionRow(icon: Icons.swap_horiz_rounded, text: l10n.pairHuntRule2),
+                const SizedBox(height: 10),
+                _InstructionRow(icon: Icons.emoji_emotions_rounded, text: l10n.pairHuntRule3),
+                const SizedBox(height: 10),
+                _InstructionRow(icon: Icons.timer_rounded, text: l10n.pairHuntRule4(challenge.timeLimitSeconds)),
               ],
             ),
           ),
@@ -233,44 +268,25 @@ class _PairHuntGameScreenState extends State<PairHuntGameScreen> {
     );
   }
 
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
+  Widget _buildInfoRow(String label, String value, IconData icon) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        color: _phCharcoal,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: kTextPrimary.withAlpha(10)),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 22, color: const Color(0xFF1A237E)),
+          Icon(icon, size: 20, color: _phAmber),
           const SizedBox(width: 12),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 15,
-              color: Colors.grey.shade700,
-            ),
-          ),
+          Text(label, style: const TextStyle(color: kTextSecondary, fontSize: 14)),
           const Spacer(),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1A237E),
-            ),
-          ),
+          Text(value, style: const TextStyle(color: kTextPrimary, fontSize: 16, fontWeight: FontWeight.bold)),
         ],
       ),
     );
   }
-
-  // ── Game view ────────────────────────────────────────────────────
 
   Widget _buildGameView(PairHuntProvider provider, AppLocalizations l10n) {
     final blockCount = widget.challenge.blockCount;
@@ -280,49 +296,38 @@ class _PairHuntGameScreenState extends State<PairHuntGameScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Column(
         children: [
-          // Top bar: timer + progress
-          _buildTimerBar(provider, l10n),
-          const SizedBox(height: 8),
-          // Progress: "3/6 pairs"
-          Text(
-            l10n.pairHuntProgress(provider.pairsFound, provider.totalPairs),
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
-            ),
-          ),
+          _buildGameHeader(provider, l10n),
+          const SizedBox(height: 10),
+          _buildMismatchFeedback(provider),
           const SizedBox(height: 12),
-          // Grid (centered)
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                // Calculate grid dimensions to fit on screen.
                 final availableHeight = constraints.maxHeight;
                 final availableWidth = constraints.maxWidth;
                 final maxBlockWidth = availableWidth / 4;
                 final maxBlockHeight = availableHeight / rows;
-                // Use the smaller dimension to keep blocks square with spacing.
-                final blockSize = (maxBlockWidth < maxBlockHeight
-                        ? maxBlockWidth
-                        : maxBlockHeight) -
-                    12; // subtract for spacing
+                final blockSize = (maxBlockWidth < maxBlockHeight ? maxBlockWidth : maxBlockHeight) - 10;
 
-                final clampedSize = blockSize.clamp(40.0, 120.0);
-                final totalGridWidth =
-                    (clampedSize * 4) + (8 * 3); // 4 columns, 3 gaps
-                final totalGridHeight =
-                    (clampedSize * rows) + (8 * (rows - 1));
+                final clampedSize = blockSize.clamp(40.0, 110.0);
+                final totalGridWidth = (clampedSize * 4) + (8 * 3);
+                final totalGridHeight = (clampedSize * rows) + (8 * (rows - 1));
 
                 return Center(
-                  child: SizedBox(
-                    width: totalGridWidth,
-                    height: totalGridHeight,
+                  child: Container(
+                    width: totalGridWidth + 16,
+                    height: totalGridHeight + 16,
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _phCharcoal,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: _phAmber.withAlpha(25), width: 1),
+                      boxShadow: [BoxShadow(color: _phAmber.withAlpha(8), blurRadius: 16)],
+                    ),
                     child: GridView.builder(
                       physics: const NeverScrollableScrollPhysics(),
                       padding: EdgeInsets.zero,
-                      gridDelegate:
-                          SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 4,
                         mainAxisSpacing: 8,
                         crossAxisSpacing: 8,
@@ -333,8 +338,7 @@ class _PairHuntGameScreenState extends State<PairHuntGameScreen> {
                         return _PairHuntBlockWidget(
                           block: provider.blocks[index],
                           size: clampedSize,
-                          isShowingMismatch: provider.isShowingMismatch &&
-                              provider.revealedIndices.contains(index),
+                          isShowingMismatch: provider.isShowingMismatch && provider.revealedIndices.contains(index),
                           onTap: () => provider.tapBlock(index),
                         );
                       },
@@ -349,14 +353,13 @@ class _PairHuntGameScreenState extends State<PairHuntGameScreen> {
     );
   }
 
-  Widget _buildTimerBar(PairHuntProvider provider, AppLocalizations l10n) {
+  Widget _buildGameHeader(PairHuntProvider provider, AppLocalizations l10n) {
     return Column(
       children: [
-        // Timer bar
         Container(
-          height: 6,
+          height: 5,
           decoration: BoxDecoration(
-            color: Colors.grey.shade200,
+            color: kTextPrimary.withAlpha(8),
             borderRadius: BorderRadius.circular(3),
           ),
           child: FractionallySizedBox(
@@ -365,37 +368,71 @@ class _PairHuntGameScreenState extends State<PairHuntGameScreen> {
             child: Container(
               decoration: BoxDecoration(
                 color: provider.timerProgress > 0.33
-                    ? Colors.green
+                    ? _phAmber
                     : provider.timerProgress > 0.15
-                        ? Colors.orange
-                        : Colors.red,
+                        ? Colors.orangeAccent
+                        : Colors.redAccent,
                 borderRadius: BorderRadius.circular(3),
+                boxShadow: [BoxShadow(
+                    color: provider.timerProgress > 0.33 ? _phAmber : Colors.redAccent,
+                    blurRadius: 4)],
               ),
             ),
           ),
         ),
-        const SizedBox(height: 4),
-        // Time remaining
+        const SizedBox(height: 6),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              l10n.pairHuntTimeRemaining(
-                provider.timeRemainingSeconds,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: _phAmber.withAlpha(15),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _phAmber.withAlpha(30)),
               ),
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: provider.timerProgress < 0.33
-                    ? Colors.red
-                    : Colors.grey.shade700,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.grid_view_rounded, color: _phAmber, size: 16),
+                  const SizedBox(width: 6),
+                  Text(l10n.pairHuntProgress(provider.pairsFound, provider.totalPairs),
+                      style: const TextStyle(color: _phAmber, fontSize: 13, fontWeight: FontWeight.w700)),
+                ],
               ),
             ),
-            Text(
-              '${provider.mismatchCount} ${l10n.pairHuntMismatches}',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey.shade500,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: provider.timerProgress < 0.33 ? Colors.redAccent.withAlpha(20) : kTextPrimary.withAlpha(8),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: provider.timerProgress < 0.33 ? Colors.redAccent.withAlpha(50) : kTextPrimary.withAlpha(15)),
+              ),
+              child: Text(
+                l10n.pairHuntTimeRemaining(provider.timeRemainingSeconds),
+                style: TextStyle(
+                  color: provider.timerProgress < 0.33 ? Colors.redAccent : kTextSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.redAccent.withAlpha(10),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.redAccent.withAlpha(20)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 14),
+                  const SizedBox(width: 4),
+                  Text('${provider.mismatchCount}',
+                      style: const TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.w700)),
+                ],
               ),
             ),
           ],
@@ -404,18 +441,41 @@ class _PairHuntGameScreenState extends State<PairHuntGameScreen> {
     );
   }
 
-  // ── Exit confirmation ────────────────────────────────────────────
+  Widget _buildMismatchFeedback(PairHuntProvider provider) {
+    return AnimatedOpacity(
+      opacity: provider.isShowingMismatch ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 200),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [Colors.redAccent, Color(0xFFE53935)]),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [BoxShadow(color: Colors.redAccent.withAlpha(40), blurRadius: 8)],
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.close_rounded, color: kTextPrimary, size: 18),
+            SizedBox(width: 8),
+            Text('NO MATCH — TRY AGAIN',
+                style: TextStyle(color: kTextPrimary, fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+          ],
+        ),
+      ),
+    );
+  }
 
   void _showExitConfirmation(AppLocalizations l10n) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.quitGame),
-        content: Text(l10n.quitGameConfirm),
+        backgroundColor: _phCharcoal,
+        title: Text(l10n.quitGame, style: const TextStyle(color: kTextPrimary)),
+        content: Text(l10n.quitGameConfirm, style: const TextStyle(color: kTextSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.keepPlaying),
+            child: Text(l10n.keepPlaying, style: const TextStyle(color: _phAmber)),
           ),
           TextButton(
             onPressed: () {
@@ -423,44 +483,31 @@ class _PairHuntGameScreenState extends State<PairHuntGameScreen> {
               context.read<PairHuntProvider>().reset();
               Navigator.pop(context);
             },
-            child: Text(l10n.quit, style: const TextStyle(color: Colors.red)),
+            child: Text(l10n.quit, style: const TextStyle(color: Colors.redAccent)),
           ),
         ],
       ),
     );
   }
 
-  // ── Navigation ───────────────────────────────────────────────────
-
   void _navigateToResult(PairHuntProvider provider) {
     final playerProvider = context.read<PlayerProvider>();
     final result = provider.finalizeResult(playerProvider.playerData);
-
     context.read<ResultProvider>().saveResult(result);
-
     if (!mounted) return;
 
     if (widget.competitionId != null) {
       Navigator.pop(context, {
-        'result': result,
-        'challenge': widget.challenge,
-        'competitionId': widget.competitionId,
+        'result': result, 'challenge': widget.challenge, 'competitionId': widget.competitionId,
       });
     } else {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (_) => ResultScreen(
-            result: result,
-            challenge: widget.challenge,
-          ),
-        ),
+        MaterialPageRoute(builder: (_) => ResultScreen(result: result, challenge: widget.challenge)),
       );
     }
   }
 }
-
-// ── Block widget ───────────────────────────────────────────────────
 
 class _PairHuntBlockWidget extends StatefulWidget {
   final PairHuntBlock block;
@@ -469,30 +516,22 @@ class _PairHuntBlockWidget extends StatefulWidget {
   final VoidCallback onTap;
 
   const _PairHuntBlockWidget({
-    required this.block,
-    required this.size,
-    required this.isShowingMismatch,
-    required this.onTap,
+    required this.block, required this.size, required this.isShowingMismatch, required this.onTap,
   });
 
   @override
   State<_PairHuntBlockWidget> createState() => _PairHuntBlockWidgetState();
 }
 
-class _PairHuntBlockWidgetState extends State<_PairHuntBlockWidget>
-    with SingleTickerProviderStateMixin {
+class _PairHuntBlockWidgetState extends State<_PairHuntBlockWidget> with SingleTickerProviderStateMixin {
   late AnimationController _flipController;
   late Animation<double> _flipAnimation;
-
   bool _wasRevealed = false;
 
   @override
   void initState() {
     super.initState();
-    _flipController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 250),
-    );
+    _flipController = AnimationController(vsync: this, duration: const Duration(milliseconds: 280));
     _flipAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _flipController, curve: Curves.easeInOut),
     );
@@ -526,9 +565,20 @@ class _PairHuntBlockWidgetState extends State<_PairHuntBlockWidget>
     return AnimatedBuilder(
       animation: _flipAnimation,
       builder: (context, child) {
-        // Perspective flip: show back when animation < 0.5, front when >= 0.5
         final showFront = _flipAnimation.value >= 0.5;
-        final scaleX = (_flipAnimation.value - 0.5).abs() * 2; // 1 → 0 → 1
+        final scaleX = (_flipAnimation.value - 0.5).abs() * 2;
+
+        final borderColor = isMatched
+            ? _phCyan
+            : showFront
+                ? _phAmber.withAlpha(120)
+                : kTextPrimary.withAlpha(15);
+
+        final bgColor = isMatched
+            ? _phCyan.withAlpha(15)
+            : showFront
+                ? _phCharcoal
+                : _phCharcoal;
 
         return Transform.scale(
           scaleX: scaleX,
@@ -538,49 +588,31 @@ class _PairHuntBlockWidgetState extends State<_PairHuntBlockWidget>
             onTap: isFaceUp ? null : widget.onTap,
             child: Container(
               decoration: BoxDecoration(
-                color: showFront
-                    ? (isMatched
-                        ? Colors.green.shade100
-                        : Colors.white)
-                    : const Color(0xFF1A237E),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isMatched
-                      ? Colors.green
-                      : showFront
-                          ? Colors.grey.shade300
-                          : const Color(0xFF1A237E).withAlpha(100),
-                  width: isMatched ? 2.5 : 1.5,
-                ),
+                color: bgColor,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: borderColor, width: isMatched ? 2.5 : 1.2),
                 boxShadow: isMatched
-                    ? [
-                        BoxShadow(
-                          color: Colors.green.withAlpha(60),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                    : [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(25),
-                          blurRadius: 3,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                    ? [BoxShadow(color: _phCyan.withAlpha(30), blurRadius: 10)]
+                    : showFront
+                        ? [BoxShadow(color: _phAmber.withAlpha(20), blurRadius: 8)]
+                        : [BoxShadow(color: Colors.black.withAlpha(40), blurRadius: 3, offset: const Offset(0, 2))],
+                gradient: !showFront && !isMatched
+                    ? const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [_phCharcoal, Color(0xFF252530)],
+                      )
+                    : null,
               ),
               child: Center(
                 child: showFront
                     ? Text(
                         widget.block.emoji,
-                        style: TextStyle(
-                          fontSize: (widget.size * 0.45).clamp(18.0, 48.0),
-                        ),
+                        style: TextStyle(fontSize: (widget.size * 0.45).clamp(18.0, 48.0)),
                       )
-                    : Icon(
-                        Icons.help_outline,
-                        size: (widget.size * 0.35).clamp(16.0, 40.0),
-                        color: Colors.white70,
-                      ),
+                    : Icon(Icons.help_outline_rounded,
+                        size: (widget.size * 0.32).clamp(16.0, 36.0),
+                        color: kTextMuted.withAlpha(80)),
               ),
             ),
           ),
@@ -590,10 +622,36 @@ class _PairHuntBlockWidgetState extends State<_PairHuntBlockWidget>
   }
 }
 
+class _InfoPill extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final Color color;
+  const _InfoPill({required this.icon, required this.text, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: _phCharcoal,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withAlpha(40)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 16),
+          const SizedBox(width: 6),
+          Text(text, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+}
+
 class _InstructionRow extends StatelessWidget {
   final IconData icon;
   final String text;
-
   const _InstructionRow({required this.icon, required this.text});
 
   @override
@@ -601,18 +659,9 @@ class _InstructionRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: const Color(0xFF1A237E)),
+        Icon(icon, size: 18, color: _phAmber),
         const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(
-              fontSize: 15,
-              color: Color(0xFF1A237E),
-              height: 1.4,
-            ),
-          ),
-        ),
+        Expanded(child: Text(text, style: const TextStyle(color: kTextSecondary, fontSize: 14, height: 1.4))),
       ],
     );
   }

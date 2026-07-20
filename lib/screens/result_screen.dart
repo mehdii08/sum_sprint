@@ -9,12 +9,16 @@ import '../providers/mind_timer_provider.dart';
 import '../providers/pair_hunt_provider.dart';
 import '../providers/tic_tac_toe_provider.dart';
 import '../providers/competition_provider.dart';
+import '../providers/auth_provider.dart';
+import '../providers/tg_home_provider.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/app_theme.dart';
 import 'game_screen.dart';
 import 'mind_timer_game_screen.dart';
 import 'pair_hunt_game_screen.dart';
 import 'tic_tac_toe_game_screen.dart';
 import 'home_screen.dart';
+import 'tg_home_screen.dart';
 
 class ResultScreen extends StatefulWidget {
   final Result result;
@@ -32,44 +36,41 @@ class ResultScreen extends StatefulWidget {
   State<ResultScreen> createState() => _ResultScreenState();
 }
 
-class _ResultScreenState extends State<ResultScreen> {
+class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderStateMixin {
   bool _submitting = false;
   bool _submitted = false;
   String? _submitError;
 
+  late final AnimationController _enterCtrl;
+  late final Animation<double> _enterAnim;
+
   @override
   void initState() {
     super.initState();
+    _enterCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+    _enterAnim = CurvedAnimation(parent: _enterCtrl, curve: Curves.easeOutCubic);
+    _enterCtrl.forward();
     if (widget.competitionId != null) {
       _submitToCompetition();
     }
   }
 
-  Future<void> _submitToCompetition() async {
-    setState(() {
-      _submitting = true;
-      _submitError = null;
-    });
+  @override
+  void dispose() {
+    _enterCtrl.dispose();
+    super.dispose();
+  }
 
+  Future<void> _submitToCompetition() async {
+    setState(() { _submitting = true; _submitError = null; });
     try {
       final cp = context.read<CompetitionProvider>();
-      await cp
-          .submitChallengeResult(widget.result)
-          .timeout(const Duration(seconds: 5));
-      if (mounted) {
-        setState(() {
-          _submitting = false;
-          _submitted = true;
-        });
-      }
+      await cp.submitChallengeResult(widget.result).timeout(const Duration(seconds: 5));
+      if (mounted) setState(() { _submitting = false; _submitted = true; });
     } catch (e) {
-      debugPrint('_submitToCompetition error: $e');
       if (mounted) {
         final l10n = AppLocalizations.of(context);
-        setState(() {
-          _submitting = false;
-          _submitError = l10n.scoreSavedLocally;
-        });
+        setState(() { _submitting = false; _submitError = l10n.scoreSavedLocally; });
       }
     }
   }
@@ -81,229 +82,138 @@ class _ResultScreenState extends State<ResultScreen> {
 
     return PopScope(
       canPop: false,
-      child: Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF1A237E), Color(0xFF4A148C)],
-            ),
-          ),
-          child: SafeArea(
-            child: Center(
+      child: Container(
+        decoration: const BoxDecoration(gradient: kBgGradient),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: SafeArea(
+            child: FadeTransition(
+              opacity: _enterAnim,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(32),
+                padding: const EdgeInsets.all(24),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withAlpha(30),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        widget.result.isTicTacToe
-                            ? (widget.result.roundsWon >= widget.result.totalRounds &&
-                                    widget.result.totalRounds > 0
-                                ? Icons.emoji_events
-                                : Icons.grid_3x3)
-                            : widget.result.isPairHunt
-                                ? (widget.result.pairsFound >= widget.result.totalPairs
-                                    ? Icons.emoji_events
-                                    : Icons.grid_view)
-                                : widget.result.correctCount == widget.challenge.questionCount
-                                    ? Icons.emoji_events
-                                    : Icons.workspace_premium,
-                        size: 72,
-                        color: widget.result.isTicTacToe
-                            ? (widget.result.roundsWon >= widget.result.totalRounds &&
-                                    widget.result.totalRounds > 0
-                                ? Colors.amber
-                                : Colors.white70)
-                            : widget.result.isPairHunt
-                                ? (widget.result.pairsFound >= widget.result.totalPairs
-                                    ? Colors.amber
-                                    : Colors.white70)
-                                : widget.result.correctCount == widget.challenge.questionCount
-                                    ? Colors.amber
-                                    : Colors.white70,
-                      ),
-                    ),
                     const SizedBox(height: 20),
-                    Text(l10n.challengeComplete,
-                        style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
-                    const SizedBox(height: 32),
+                    _TrophyHeader(result: widget.result, challenge: widget.challenge),
+                    const SizedBox(height: 24),
+                    const Text('CHALLENGE COMPLETE!',
+                        style: TextStyle(color: kTextPrimary, fontSize: 26, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    _GradeBadge(result: widget.result),
+                    const SizedBox(height: 24),
 
-                    // Submission status
                     if (_submitting)
-                      _statusBanner(Icons.cloud_upload, l10n.submittingScore, Colors.white70, Colors.white.withAlpha(30)),
+                      _statusCard(Icons.cloud_upload_rounded, l10n.submittingScore, kAccentCyan),
                     if (_submitted)
-                      _statusBanner(Icons.cloud_done, l10n.scoreSubmitted, Colors.green, Colors.green.shade400.withAlpha(50)),
+                      _statusCard(Icons.cloud_done_rounded, l10n.scoreSubmitted, Colors.greenAccent),
                     if (_submitError != null)
                       Container(
-                        padding: const EdgeInsets.all(12),
                         margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.red.shade100,
-                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.redAccent.withAlpha(15),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: Colors.redAccent.withAlpha(40)),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.cloud_off, color: Colors.red, size: 20),
+                            const Icon(Icons.cloud_off_rounded, color: Colors.redAccent, size: 20),
                             const SizedBox(width: 8),
-                            Expanded(child: Text(_submitError!, style: const TextStyle(color: Colors.red, fontSize: 13))),
-                            TextButton(onPressed: _submitToCompetition, child: Text(l10n.retry, style: const TextStyle(fontSize: 12))),
+                            Expanded(child: Text(_submitError!, style: const TextStyle(color: Colors.redAccent, fontSize: 13))),
+                            TextButton(onPressed: _submitToCompetition,
+                                child: Text(l10n.retry, style: const TextStyle(color: kAccentCyan, fontSize: 12))),
                           ],
                         ),
                       ),
 
-                    // Score card
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [BoxShadow(color: Colors.black.withAlpha(50), blurRadius: 20, offset: const Offset(0, 8))],
-                      ),
-                      child: Column(
-                        children: [
-                          Text(l10n.finalScore, style: const TextStyle(fontSize: 16, color: Colors.grey)),
-                          const SizedBox(height: 8),
-                          Text('${widget.result.score}',
-                              style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold, color: Color(0xFFFF6F00))),
-                          const SizedBox(height: 4),
-                          Text(l10n.points, style: TextStyle(fontSize: 16, color: Colors.grey.shade600)),
-                          const Divider(height: 32),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: widget.result.isTicTacToe
-                                ? [
-                                    _StatItem(icon: Icons.emoji_events, color: Colors.green,
-                                        value: '${widget.result.roundsWon}/${widget.result.totalRounds}', label: l10n.ticTacToeWinsStat),
-                                    _StatItem(icon: Icons.handshake, color: Colors.orange,
-                                        value: '${widget.result.roundsDrawn}', label: l10n.ticTacToeDrawsStat),
-                                    _StatItem(icon: Icons.timer, color: Colors.purple,
-                                        value: '${(widget.result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s', label: l10n.ticTacToeTimeStat),
-                                  ]
-                                : widget.result.isPairHunt
-                                ? [
-                                    _StatItem(icon: Icons.grid_view, color: Colors.green,
-                                        value: '${widget.result.pairsFound}/${widget.result.totalPairs}', label: l10n.pairHuntPairsFoundStat),
-                                    _StatItem(icon: Icons.warning_amber, color: Colors.orange,
-                                        value: '${widget.result.mismatchCount}', label: l10n.pairHuntMismatchStat),
-                                    _StatItem(icon: Icons.timer, color: Colors.purple,
-                                        value: '${(widget.result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s', label: l10n.pairHuntTimeTakenStat),
-                                  ]
-                                : widget.result.isMindTimer
-                                    ? [
-                                        _StatItem(icon: Icons.check_circle, color: Colors.green,
-                                            value: '${widget.result.withinRangeCount}/${widget.challenge.questionCount}', label: l10n.withinRangeStat),
-                                        _StatItem(icon: Icons.speed, color: Colors.blue,
-                                            value: '${(widget.result.averageAccuracy * 100).toStringAsFixed(0)}%', label: l10n.avgAccuracyStat),
-                                        _StatItem(icon: Icons.timer, color: Colors.purple,
-                                            value: '${(widget.result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s', label: l10n.totalTimeStat),
-                                      ]
-                                    : [
-                                        _StatItem(icon: Icons.check_circle, color: Colors.green,
-                                            value: '${widget.result.correctCount}/${widget.challenge.questionCount}', label: l10n.correctStat),
-                                        _StatItem(icon: Icons.timer, color: Colors.blue,
-                                            value: widget.result.averageTimeSeconds.toStringAsFixed(1), label: l10n.avgTimeStat),
-                                        _StatItem(icon: Icons.speed, color: Colors.purple,
-                                            value: '${(widget.result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s', label: l10n.totalTimeStat),
-                                      ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+                    _ScoreCard(result: widget.result),
+                    const SizedBox(height: 20),
+                    _StatsRow(result: widget.result, challenge: widget.challenge),
+                    const SizedBox(height: 20),
 
-                    // High score badge (offline only)
                     if (!isCompetition)
                       FutureBuilder<int>(
                         future: context.read<ResultProvider>().getHighScore(widget.challenge.id),
                         builder: (ctx, snap) {
                           final hs = snap.data ?? 0;
                           if (widget.result.score >= hs && widget.result.score > 0) {
-                            return Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                              decoration: BoxDecoration(color: Colors.amber.shade400, borderRadius: BorderRadius.circular(20)),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.star, color: Colors.white),
-                                  const SizedBox(width: 8),
-                                  Text(l10n.newHighScore, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                                ],
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 20),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(colors: [kAccentGold, Color(0xFFD97706)]),
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [BoxShadow(color: kAccentGold.withAlpha(40), blurRadius: 16)],
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text('🎉', style: TextStyle(fontSize: 20)),
+                                    SizedBox(width: 8),
+                                    Text('NEW PERSONAL BEST!',
+                                        style: TextStyle(color: kTextPrimary, fontWeight: FontWeight.w800, fontSize: 15, letterSpacing: 0.8)),
+                                  ],
+                                ),
                               ),
                             );
                           }
                           return const SizedBox.shrink();
                         },
                       ),
-                    const SizedBox(height: 40),
 
-                    // Play Again (offline mode only — competition challenges are one-shot)
                     if (!isCompetition) ...[
-                      SizedBox(
-                        width: double.infinity, height: 56,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            if (widget.challenge.isTicTacToe) {
-                              context.read<TicTacToeProvider>().reset();
-                              Navigator.pushReplacement(context,
-                                  MaterialPageRoute(builder: (_) => TicTacToeGameScreen(challenge: widget.challenge, competitionId: widget.competitionId)));
-                            } else if (widget.challenge.isPairHunt) {
-                              context.read<PairHuntProvider>().reset();
-                              Navigator.pushReplacement(context,
-                                  MaterialPageRoute(builder: (_) => PairHuntGameScreen(challenge: widget.challenge, competitionId: widget.competitionId)));
-                            } else if (widget.challenge.isMindTimer) {
-                              context.read<MindTimerProvider>().reset();
-                              Navigator.pushReplacement(context,
-                                  MaterialPageRoute(builder: (_) => MindTimerGameScreen(challenge: widget.challenge, competitionId: widget.competitionId)));
-                            } else {
-                              context.read<ChallengeProvider>().reset();
-                              Navigator.pushReplacement(context,
-                                  MaterialPageRoute(builder: (_) => GameScreen(challenge: widget.challenge, competitionId: widget.competitionId)));
-                            }
-                          },
-                          icon: const Icon(Icons.replay),
-                          label: Text(l10n.playAgain, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFF6F00), foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          ),
-                        ),
+                      _PrimaryButton(
+                        label: 'PLAY AGAIN',
+                        icon: Icons.replay_rounded,
+                        color: kAccentPurple,
+                        onPressed: () {
+                          if (widget.challenge.isTicTacToe) {
+                            context.read<TicTacToeProvider>().reset();
+                            Navigator.pushReplacement(context,
+                                MaterialPageRoute(builder: (_) => TicTacToeGameScreen(challenge: widget.challenge)));
+                          } else if (widget.challenge.isPairHunt) {
+                            context.read<PairHuntProvider>().reset();
+                            Navigator.pushReplacement(context,
+                                MaterialPageRoute(builder: (_) => PairHuntGameScreen(challenge: widget.challenge)));
+                          } else if (widget.challenge.isMindTimer) {
+                            context.read<MindTimerProvider>().reset();
+                            Navigator.pushReplacement(context,
+                                MaterialPageRoute(builder: (_) => MindTimerGameScreen(challenge: widget.challenge)));
+                          } else {
+                            context.read<ChallengeProvider>().reset();
+                            Navigator.pushReplacement(context,
+                                MaterialPageRoute(builder: (_) => GameScreen(challenge: widget.challenge)));
+                          }
+                        },
                       ),
                       const SizedBox(height: 12),
                     ],
 
-                    // Home / Back
-                    SizedBox(
-                      width: double.infinity, height: 56,
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          context.read<ChallengeProvider>().reset();
-                          context.read<MindTimerProvider>().reset();
-                          context.read<PairHuntProvider>().reset();
-                          context.read<TicTacToeProvider>().reset();
-                          if (isCompetition) {
-                            Navigator.pop(context);
+                    _SecondaryButton(
+                      label: isCompetition ? l10n.backToCompetition : 'GO TO HUB',
+                      icon: isCompetition ? Icons.arrow_back_rounded : Icons.home_rounded,
+                      onPressed: () {
+                        context.read<ChallengeProvider>().reset();
+                        context.read<MindTimerProvider>().reset();
+                        context.read<PairHuntProvider>().reset();
+                        context.read<TicTacToeProvider>().reset();
+                        if (isCompetition) {
+                          Navigator.pop(context);
+                        } else {
+                          final auth = context.read<AuthProvider>();
+                          if (auth.isLoggedIn) {
+                            context.read<TgHomeProvider>().loadProfile();
+                            Navigator.pushAndRemoveUntil(context,
+                                MaterialPageRoute(builder: (_) => const TgHomeScreen()), (_) => false);
                           } else {
                             Navigator.pushAndRemoveUntil(context,
                                 MaterialPageRoute(builder: (_) => const HomeScreen()), (_) => false);
                           }
-                        },
-                        icon: Icon(isCompetition ? Icons.arrow_back : Icons.home),
-                        label: Text(isCompetition ? l10n.backToCompetition : l10n.home,
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white, side: const BorderSide(color: Colors.white54, width: 2),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        ),
-                      ),
+                        }
+                      },
                     ),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -314,32 +224,283 @@ class _ResultScreenState extends State<ResultScreen> {
     );
   }
 
-  Widget _statusBanner(IconData icon, String text, Color color, Color bg) {
+  Widget _statusCard(IconData icon, String text, Color color) {
     return Container(
       padding: const EdgeInsets.all(12),
       margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: color.withAlpha(15),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withAlpha(30)),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, color: color, size: 20),
           const SizedBox(width: 8),
-          Text(text, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+          Text(text, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
         ],
       ),
     );
   }
 }
 
-class _StatItem extends StatelessWidget {
-  final IconData icon; final Color color; final String value; final String label;
-  const _StatItem({required this.icon, required this.color, required this.value, required this.label});
+class _TrophyHeader extends StatelessWidget {
+  final Result result;
+  final ChallengeDefinition challenge;
+  const _TrophyHeader({required this.result, required this.challenge});
+
   @override
   Widget build(BuildContext context) {
-    return Column(children: [
-      Icon(icon, color: color, size: 28), const SizedBox(height: 8),
-      Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-      Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-    ]);
+    final isPerfect = result.isTicTacToe
+        ? result.roundsWon >= result.totalRounds && result.totalRounds > 0
+        : result.isPairHunt
+            ? result.pairsFound >= result.totalPairs
+            : result.correctCount == challenge.questionCount;
+
+    return Container(
+      width: 100,
+      height: 100,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [isPerfect ? kAccentGold.withAlpha(80) : kAccentPurple.withAlpha(60), Colors.transparent],
+        ),
+        border: Border.all(color: isPerfect ? kAccentGold.withAlpha(80) : kAccentPurple.withAlpha(50), width: 2),
+      ),
+      child: Center(
+        child: Icon(
+          isPerfect ? Icons.emoji_events_rounded : Icons.workspace_premium_rounded,
+          size: 48,
+          color: isPerfect ? kAccentGold : kAccentPurple,
+        ),
+      ),
+    );
+  }
+}
+
+class _GradeBadge extends StatelessWidget {
+  final Result result;
+  const _GradeBadge({required this.result});
+
+  String _grade() {
+    if (result.isTicTacToe) {
+      if (result.roundsWon == 3) return 'S';
+      if (result.roundsWon == 2) return 'A';
+      if (result.roundsWon == 1) return 'B';
+      return 'C';
+    }
+    final ratio = result.correctCount / (result.totalRounds > 0 ? result.totalRounds : challenge?.questionCount ?? 10);
+    if (ratio >= 1.0) return 'S';
+    if (ratio >= 0.8) return 'A';
+    if (ratio >= 0.6) return 'B';
+    if (ratio >= 0.4) return 'C';
+    return 'D';
+  }
+
+  ChallengeDefinition? get challenge => null;
+
+  @override
+  Widget build(BuildContext context) {
+    final grade = _grade();
+    final color = grade == 'S' || grade == 'A'
+        ? kAccentGold
+        : grade == 'B'
+            ? kAccentCyan
+            : kTextMuted;
+
+    return Text('GRADE: $grade',
+        style: TextStyle(color: color, fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 2.0));
+  }
+}
+
+class _ScoreCard extends StatefulWidget {
+  final Result result;
+  const _ScoreCard({required this.result});
+
+  @override
+  State<_ScoreCard> createState() => _ScoreCardState();
+}
+
+class _ScoreCardState extends State<_ScoreCard> with SingleTickerProviderStateMixin {
+  late final AnimationController _countCtrl;
+  late final Animation<int> _countAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _countCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
+    _countAnim = IntTween(begin: 0, end: widget.result.score).animate(
+      CurvedAnimation(parent: _countCtrl, curve: Curves.easeOut),
+    );
+    _countCtrl.forward();
+  }
+
+  @override
+  void dispose() {
+    _countCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [kAccentGold.withAlpha(15), kAccentGold.withAlpha(5)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: kAccentGold.withAlpha(40), width: 0.8),
+        boxShadow: [BoxShadow(color: kAccentGold.withAlpha(12), blurRadius: 20)],
+      ),
+      child: Column(
+        children: [
+          const Text('TOTAL POINTS EARNED',
+              style: TextStyle(color: kTextSecondary, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 1.5)),
+          const SizedBox(height: 12),
+          AnimatedBuilder(
+            animation: _countAnim,
+            builder: (context, child) {
+              return Text('+${_countAnim.value}',
+                  style: const TextStyle(color: kAccentGold, fontSize: 56, fontWeight: FontWeight.w900));
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatsRow extends StatelessWidget {
+  final Result result;
+  final ChallengeDefinition challenge;
+  const _StatsRow({required this.result, required this.challenge});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: result.isTicTacToe
+          ? [
+              _StatCard(icon: Icons.emoji_events_rounded, color: Colors.greenAccent,
+                  value: '${result.roundsWon}/${result.totalRounds}', label: 'Wins'),
+              _StatCard(icon: Icons.handshake_rounded, color: kAccentGold,
+                  value: '${result.roundsDrawn}', label: 'Draws'),
+              _StatCard(icon: Icons.timer_rounded, color: kAccentPurple,
+                  value: '${(result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s', label: 'Time'),
+            ]
+          : result.isPairHunt
+              ? [
+                  _StatCard(icon: Icons.grid_view_rounded, color: Colors.greenAccent,
+                      value: '${result.pairsFound}/${result.totalPairs}', label: 'Pairs'),
+                  _StatCard(icon: Icons.warning_amber_rounded, color: kAccentGold,
+                      value: '${result.mismatchCount}', label: 'Misses'),
+                  _StatCard(icon: Icons.timer_rounded, color: kAccentPurple,
+                      value: '${(result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s', label: 'Time'),
+                ]
+              : result.isMindTimer
+                  ? [
+                      _StatCard(icon: Icons.check_circle_rounded, color: Colors.greenAccent,
+                          value: '${result.withinRangeCount}/${challenge.questionCount}', label: 'On Range'),
+                      _StatCard(icon: Icons.speed_rounded, color: kAccentCyan,
+                          value: '${(result.averageAccuracy * 100).toStringAsFixed(0)}%', label: 'Accuracy'),
+                      _StatCard(icon: Icons.timer_rounded, color: kAccentPurple,
+                          value: '${(result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s', label: 'Time'),
+                    ]
+                  : [
+                      _StatCard(icon: Icons.check_circle_rounded, color: Colors.greenAccent,
+                          value: '${result.correctCount}/${challenge.questionCount}', label: 'Correct'),
+                      _StatCard(icon: Icons.timer_rounded, color: kAccentCyan,
+                          value: result.averageTimeSeconds.toStringAsFixed(1), label: 'Avg Time'),
+                      _StatCard(icon: Icons.speed_rounded, color: kAccentPurple,
+                          value: '${(result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s', label: 'Total'),
+                    ],
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String value;
+  final String label;
+  const _StatCard({required this.icon, required this.color, required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: kSurfaceDark,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withAlpha(20)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 22),
+            const SizedBox(height: 8),
+            Text(value, style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.w800)),
+            Text(label, style: const TextStyle(color: kTextMuted, fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PrimaryButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onPressed;
+  const _PrimaryButton({required this.label, required this.icon, required this.color, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 20),
+        label: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: 1.0)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: kTextPrimary,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          elevation: 0,
+        ),
+      ),
+    );
+  }
+}
+
+class _SecondaryButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onPressed;
+  const _SecondaryButton({required this.label, required this.icon, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 20),
+        label: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, letterSpacing: 0.8)),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: kTextPrimary,
+          side: BorderSide(color: kTextPrimary.withAlpha(30)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+      ),
+    );
   }
 }
