@@ -138,7 +138,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Round ${provider.currentQuestionIndex + 1}/${provider.totalQuestions}',
+                Text(l10n.roundProgress(provider.currentQuestionIndex + 1, provider.totalQuestions),
                     style: const TextStyle(color: kTextSecondary, fontSize: 13, fontWeight: FontWeight.w500)),
                 Row(
                   children: [
@@ -246,8 +246,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: kAccentPurple.withAlpha(20)),
           ),
-          child: const Center(
-            child: Text('Get ready...', style: TextStyle(color: kTextSecondary, fontSize: 20, fontWeight: FontWeight.w500)),
+          child: Center(
+            child: Text(l10n.getReady,
+                style: const TextStyle(color: kTextSecondary, fontSize: 20, fontWeight: FontWeight.w500)),
           ),
         );
 
@@ -405,7 +406,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                         color: kAccentPurple.withAlpha(15),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text('R 1/${challenge.questionCount}  •  ${challenge.maxPoints} PTS',
+                      child: Text(
+                          '${l10n.roundShort(1, challenge.questionCount)}  •  ${challenge.maxPoints} ${l10n.pointsShort.toUpperCase()}',
                           style: TextStyle(color: kAccentPurple, fontSize: 12, fontWeight: FontWeight.w600)),
                     ),
                     const SizedBox(height: 20),
@@ -455,20 +457,20 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 ),
               ),
               const SizedBox(height: 24),
-              const Text('Solve fast. Don\'t blink.',
-                  style: TextStyle(color: kTextPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(l10n.mathIntroTitle,
+                  style: const TextStyle(color: kTextPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              const Text('Select the correct answer before time runs out.\nConsecutive correct answers build your multiplier.',
+              Text(l10n.mathIntroSubtitle,
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: kTextSecondary, fontSize: 13)),
+                  style: const TextStyle(color: kTextSecondary, fontSize: 13)),
               const SizedBox(height: 20),
               Wrap(
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-                  _InfoPill(icon: Icons.bolt_rounded, text: '${challenge.questionCount} Rounds'),
-                  _InfoPill(icon: Icons.timer_rounded, text: '${challenge.timePerQuestionSeconds}s Each'),
-                  _InfoPill(icon: Icons.star_rounded, text: '${challenge.maxPoints} Max Pts'),
+                  _InfoPill(icon: Icons.bolt_rounded, text: l10n.pillRounds(challenge.questionCount)),
+                  _InfoPill(icon: Icons.timer_rounded, text: l10n.pillSecondsEach(challenge.timePerQuestionSeconds)),
+                  _InfoPill(icon: Icons.star_rounded, text: l10n.pillMaxPoints(challenge.maxPoints)),
                 ],
               ),
               const SizedBox(height: 28),
@@ -500,8 +502,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                           ),
                     label: Text(
                       widget.challenge.isFree
-                          ? 'START GAME'
-                          : 'START · ${widget.challenge.entryCoins}',
+                          ? l10n.startGame.toUpperCase()
+                          : l10n.startWithCost(widget.challenge.entryCoins).toUpperCase(),
                       style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: 1.2),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -515,8 +517,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text('PERSONAL BEST: -- PTS',
-                    style: TextStyle(color: kTextMuted, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.8)),
+                Text(l10n.personalBestNone.toUpperCase(),
+                    style: const TextStyle(color: kTextMuted, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.8)),
               ],
             ),
           ),

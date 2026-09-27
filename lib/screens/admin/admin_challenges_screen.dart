@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/challenge_definition.dart';
 import '../../widgets/admin_shared.dart';
 
@@ -43,20 +45,20 @@ class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
   }
 
   Future<void> _delete(String id) async {
+    final l10n = AppLocalizations.of(context);
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Challenge'),
-        content: const Text(
-            'Are you sure you want to delete this challenge?'),
+        title: Text(l10n.adminDeleteChallengeTitle),
+        content: Text(l10n.adminDeleteChallengeMsg),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
+              child: Text(l10n.adminCancel)),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(l10n.adminDelete),
           ),
         ],
       ),
@@ -76,12 +78,12 @@ class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
         SnackBar(content: Text(msg), backgroundColor: Colors.red));
   }
 
-  String _typeLabel(ChallengeType t) {
+  String _typeLabel(ChallengeType t, AppLocalizations l10n) {
     return switch (t) {
-      ChallengeType.math => 'Math',
-      ChallengeType.mindTimer => 'Mind Timer',
-      ChallengeType.pairHunt => 'Pair Hunt',
-      ChallengeType.ticTacToe => 'Tic-Tac-Toe',
+      ChallengeType.math => l10n.adminTypeMath,
+      ChallengeType.mindTimer => l10n.adminTypeMindTimer,
+      ChallengeType.pairHunt => l10n.adminTypePairHunt,
+      ChallengeType.ticTacToe => l10n.adminTypeTicTacToe,
     };
   }
 
@@ -96,15 +98,16 @@ class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manage Challenges'),
+        title: Text(l10n.adminManageChallenges),
         backgroundColor: const Color(0xFF1A237E),
         foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            tooltip: 'Create',
+            tooltip: l10n.adminCreate,
             onPressed: () async {
               final created =
                   await Navigator.push<Map<String, dynamic>>(
@@ -142,24 +145,24 @@ class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
                       const SizedBox(height: 16),
                       ElevatedButton(
                           onPressed: _load,
-                          child: const Text('Retry')),
+                          child: Text(l10n.adminRetry)),
                     ],
                   ),
                 )
               : _challenges.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.calculate_outlined,
+                          const Icon(Icons.calculate_outlined,
                               size: 64, color: Colors.grey),
-                          SizedBox(height: 16),
-                          Text('No challenges yet',
-                              style: TextStyle(
+                          const SizedBox(height: 16),
+                          Text(l10n.adminNoChallenges,
+                              style: const TextStyle(
                                   fontSize: 16, color: Colors.grey)),
-                          SizedBox(height: 4),
-                          Text('Tap + to create your first one',
-                              style: TextStyle(
+                          const SizedBox(height: 4),
+                          Text(l10n.adminTapToCreate,
+                              style: const TextStyle(
                                   fontSize: 14, color: Colors.grey)),
                         ],
                       ),
@@ -219,7 +222,7 @@ class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
                                   style: const TextStyle(
                                       fontWeight: FontWeight.w600)),
                               subtitle: Text(
-                                  '${_typeLabel(type)}  •  ${c.isFree ? 'Free' : '${c.entryCoins} coins'}'),
+                                  '${_typeLabel(type, l10n)}  •  ${c.isFree ? l10n.free : l10n.coinsAmount(c.entryCoins)}'),
                               trailing: PopupMenuButton<String>(
                                 onSelected: (action) async {
                                   if (action == 'edit') {
@@ -247,14 +250,14 @@ class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
                                     _delete(c.id);
                                   }
                                 },
-                                itemBuilder: (_) => const [
+                                itemBuilder: (_) => [
                                   PopupMenuItem(
                                       value: 'edit',
-                                      child: Text('Edit')),
+                                      child: Text(l10n.adminEdit)),
                                   PopupMenuItem(
                                       value: 'delete',
-                                      child: Text('Delete',
-                                          style: TextStyle(
+                                      child: Text(l10n.adminDelete,
+                                          style: const TextStyle(
                                               color: Colors.red))),
                                 ],
                               ),
@@ -293,7 +296,7 @@ class _ChallengeFormState extends State<_ChallengeForm> {
   final _scrollController = ScrollController();
   final List<AdminChallengeField> _challengeFields = [];
 
-  late final TextEditingController _nameCtrl, _descCtrl;
+  late final TextEditingController _nameCtrl, _descCtrl, _entryCoinsCtrl;
 
   bool get _isEditing => widget.challenge != null;
 
@@ -303,6 +306,8 @@ class _ChallengeFormState extends State<_ChallengeForm> {
     final c = widget.challenge;
     _nameCtrl = TextEditingController(text: c?.name ?? '');
     _descCtrl = TextEditingController(text: c?.description ?? '');
+    _entryCoinsCtrl =
+        TextEditingController(text: '${c?.entryCoins ?? 0}');
 
     if (c != null) {
       _challengeFields.add(AdminChallengeField.fromChallenge(c));
@@ -316,6 +321,7 @@ class _ChallengeFormState extends State<_ChallengeForm> {
   void dispose() {
     _nameCtrl.dispose();
     _descCtrl.dispose();
+    _entryCoinsCtrl.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -324,6 +330,7 @@ class _ChallengeFormState extends State<_ChallengeForm> {
     if (!_formKey.currentState!.validate()) return;
 
     final fc = _challengeFields.first;
+    fc.entryCoins = int.tryParse(_entryCoinsCtrl.text.trim()) ?? 0;
     final isMindTimer = fc.type == 'mind_timer';
     final isPairHunt = fc.type == 'pair_hunt';
     final isTicTacToe = fc.type == 'tic_tac_toe';
@@ -369,10 +376,11 @@ class _ChallengeFormState extends State<_ChallengeForm> {
   }
 
   Future<void> _showTypePicker() async {
+    final l10n = AppLocalizations.of(context);
     final type = await showDialog<String>(
       context: context,
       builder: (ctx) => SimpleDialog(
-        title: const Text('Select Challenge Type'),
+        title: Text(l10n.adminSelectType),
         children: [
           SimpleDialogOption(
             onPressed: () => Navigator.pop(ctx, 'math'),
@@ -390,9 +398,9 @@ class _ChallengeFormState extends State<_ChallengeForm> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Math',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text('Addition, subtraction, etc.',
+                    Text(l10n.adminTypeMath,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(l10n.adminTypeMathDesc,
                         style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
                   ],
                 ),
@@ -415,9 +423,9 @@ class _ChallengeFormState extends State<_ChallengeForm> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Mind Timer',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text('Stop the hidden timer at the right moment',
+                    Text(l10n.adminTypeMindTimer,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(l10n.adminTypeMindTimerDesc,
                         style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
                   ],
                 ),
@@ -440,9 +448,9 @@ class _ChallengeFormState extends State<_ChallengeForm> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Pair Hunt',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text('Memory card matching game',
+                    Text(l10n.adminTypePairHunt,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(l10n.adminTypePairHuntDesc,
                         style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
                   ],
                 ),
@@ -465,9 +473,9 @@ class _ChallengeFormState extends State<_ChallengeForm> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Tic-Tac-Toe',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text('3 rounds vs AI (Easy → Medium → Hard)',
+                    Text(l10n.adminTypeTicTacToe,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(l10n.adminTypeTicTacToeDesc,
                         style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
                   ],
                 ),
@@ -491,22 +499,23 @@ class _ChallengeFormState extends State<_ChallengeForm> {
     final isMindTimer = fc.type == 'mind_timer';
     final isPairHunt = fc.type == 'pair_hunt';
     final isTicTacToe = fc.type == 'tic_tac_toe';
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Challenge' : 'New Challenge'),
+        title: Text(_isEditing ? l10n.adminEditChallenge : l10n.adminNewChallenge),
         backgroundColor: const Color(0xFF1A237E),
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
-          tooltip: 'Cancel',
+          tooltip: l10n.adminCancel,
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
             onPressed: _onSave,
-            tooltip: 'Save',
+            tooltip: l10n.adminSave,
           ),
         ],
       ),
@@ -518,37 +527,46 @@ class _ChallengeFormState extends State<_ChallengeForm> {
           children: [
             TextFormField(
               controller: _nameCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.adminNameLabel,
+                border: const OutlineInputBorder(),
               ),
               validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+                  (v == null || v.trim().isEmpty) ? l10n.adminNameIsRequired : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _descCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Description',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.adminDescriptionLabel,
+                border: const OutlineInputBorder(),
               ),
               maxLines: 2,
             ),
             const SizedBox(height: 12),
-            AdminNumericField(
-              label: 'Entry Coins (0 = free)',
-              icon: Icons.monetization_on_outlined,
-              value: fc.entryCoins,
-              step: 1,
-              min: 0,
-              max: 10000,
-              onChanged: (v) => setState(() => fc.entryCoins = v),
+            TextFormField(
+              controller: _entryCoinsCtrl,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: InputDecoration(
+                labelText: l10n.adminEntryCoinsFree,
+                prefixIcon: const Icon(Icons.monetization_on_outlined),
+                border: const OutlineInputBorder(),
+              ),
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) {
+                  return l10n.adminNameRequired;
+                }
+                final n = int.tryParse(v.trim());
+                if (n == null || n < 0) return l10n.adminNameRequired;
+                return null;
+              },
             ),
 
             const SizedBox(height: 24),
 
             Text(
-              'Challenge Type',
+              l10n.adminChallengeType,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -576,12 +594,12 @@ class _ChallengeFormState extends State<_ChallengeForm> {
               ),
               label: Text(
                 isTicTacToe
-                    ? 'Tic‑Tac‑Toe'
+                    ? l10n.adminTypeTicTacToe
                     : isPairHunt
-                        ? 'Pair Hunt'
+                        ? l10n.adminTypePairHunt
                         : isMindTimer
-                            ? 'Mind Timer'
-                            : 'Math',
+                            ? l10n.adminTypeMindTimer
+                            : l10n.adminTypeMath,
                 style: TextStyle(
                   color: isTicTacToe
                       ? Colors.teal
@@ -614,7 +632,7 @@ class _ChallengeFormState extends State<_ChallengeForm> {
                 children: [
                   Expanded(
                     child: AdminNumericField(
-                      label: 'Time / Round (s)',
+                      label: l10n.adminTimePerRound,
                       icon: Icons.timer,
                       value: fc.timeLimitSeconds,
                       step: 5,
@@ -628,7 +646,7 @@ class _ChallengeFormState extends State<_ChallengeForm> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: AdminNumericField(
-                      label: 'Max Points',
+                      label: l10n.adminMaxPoints,
                       value: fc.maxPoints,
                       step: 100,
                       min: 100,
@@ -645,7 +663,7 @@ class _ChallengeFormState extends State<_ChallengeForm> {
                 children: [
                   Expanded(
                     child: AdminNumericField(
-                      label: 'Blocks (even)',
+                      label: l10n.adminBlocksEven,
                       icon: Icons.grid_on,
                       value: fc.blockCount,
                       step: 4,
@@ -662,7 +680,7 @@ class _ChallengeFormState extends State<_ChallengeForm> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: AdminNumericField(
-                      label: 'Time Limit (s)',
+                      label: l10n.adminTimeLimitS,
                       value: fc.timeLimitSeconds,
                       step: 15,
                       min: 15,
@@ -679,7 +697,7 @@ class _ChallengeFormState extends State<_ChallengeForm> {
                 children: [
                   Expanded(
                     child: AdminNumericField(
-                      label: 'Pts per Pair',
+                      label: l10n.adminPointsPerPair,
                       value: fc.pointsPerPair,
                       step: 50,
                       min: 10,
@@ -692,7 +710,7 @@ class _ChallengeFormState extends State<_ChallengeForm> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: AdminNumericField(
-                      label: 'Max Bonus',
+                      label: l10n.adminMaxTimeBonus,
                       value: fc.maxTimeBonus,
                       step: 100,
                       min: 0,
@@ -706,7 +724,7 @@ class _ChallengeFormState extends State<_ChallengeForm> {
               ),
               const SizedBox(height: 8),
               AdminNumericField(
-                label: 'Penalty / Mismatch',
+                label: l10n.adminPenaltyPerMismatch,
                 icon: Icons.warning_amber,
                 value: fc.penaltyPerMismatch,
                 step: 5,
@@ -721,7 +739,7 @@ class _ChallengeFormState extends State<_ChallengeForm> {
                 children: [
                   Expanded(
                     child: AdminNumericDoubleField(
-                      label: 'Target (s)',
+                      label: l10n.adminTargetS,
                       value: fc.targetSeconds,
                       step: 1.0,
                       min: 1.0,
@@ -735,7 +753,7 @@ class _ChallengeFormState extends State<_ChallengeForm> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: AdminNumericDoubleField(
-                      label: 'Range (±s)',
+                      label: l10n.adminRangeS,
                       value: fc.rangeSeconds,
                       step: 0.5,
                       min: 0.5,
@@ -753,7 +771,7 @@ class _ChallengeFormState extends State<_ChallengeForm> {
                 children: [
                   Expanded(
                     child: AdminNumericField(
-                      label: 'Max Points',
+                      label: l10n.adminMaxPoints,
                       value: fc.maxPoints,
                       step: 100,
                       min: 100,
@@ -766,7 +784,7 @@ class _ChallengeFormState extends State<_ChallengeForm> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: AdminNumericField(
-                      label: 'Questions',
+                      label: l10n.adminQuestions,
                       value: fc.qCount,
                       step: 1,
                       min: 1,
@@ -783,7 +801,7 @@ class _ChallengeFormState extends State<_ChallengeForm> {
                 children: [
                   Expanded(
                     child: AdminNumericField(
-                      label: 'Min Number',
+                      label: l10n.adminMinNumber,
                       value: fc.min,
                       step: 10,
                       min: 1,
@@ -796,7 +814,7 @@ class _ChallengeFormState extends State<_ChallengeForm> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: AdminNumericField(
-                      label: 'Max Number',
+                      label: l10n.adminMaxNumber,
                       value: fc.max,
                       step: 10,
                       min: 1,
@@ -813,7 +831,7 @@ class _ChallengeFormState extends State<_ChallengeForm> {
                 children: [
                   Expanded(
                     child: AdminNumericField(
-                      label: 'Time / Q (s)',
+                      label: l10n.adminTimePerQuestion,
                       value: fc.time,
                       step: 1,
                       min: 1,
@@ -826,7 +844,7 @@ class _ChallengeFormState extends State<_ChallengeForm> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: AdminNumericField(
-                      label: 'Questions',
+                      label: l10n.adminQuestions,
                       value: fc.qCount,
                       step: 1,
                       min: 1,

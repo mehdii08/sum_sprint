@@ -5,6 +5,7 @@ import '../providers/auth_provider.dart';
 import '../providers/player_provider.dart';
 import '../providers/tg_home_provider.dart';
 import '../config/app_version.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import 'admin/admin_dashboard_screen.dart';
 import '../utils/clear_app_cache.dart';
@@ -32,22 +33,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _confirmClearCache(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: kSurfaceDark,
-        title: const Text('Clear Cache & Reload',
-            style: TextStyle(color: kTextPrimary)),
-        content: const Text(
-          'This will remove all cached app files and reload '
-          'the latest version. Your account data stays on the server.\n\n'
-          'Use this if the app looks outdated or broken.',
-          style: TextStyle(color: kTextSecondary),
+        title: Text(l10n.profileClearCacheTitle,
+            style: const TextStyle(color: kTextPrimary)),
+        content: Text(
+          l10n.profileClearCacheMessage,
+          style: const TextStyle(color: kTextSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: kTextMuted)),
+            child: Text(l10n.cancel, style: const TextStyle(color: kTextMuted)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -58,7 +58,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               backgroundColor: kAccentGold,
               foregroundColor: kTextPrimary,
             ),
-            child: const Text('Clear & Reload'),
+            child: Text(l10n.profileClearAndReload),
           ),
         ],
       ),
@@ -66,19 +66,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _confirmLogout(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: kSurfaceDark,
-        title: const Text('Log out?', style: TextStyle(color: kTextPrimary)),
-        content: const Text(
-          'You will need to sign in again with your email to play.',
-          style: TextStyle(color: kTextSecondary),
+        title: Text(l10n.profileLogoutTitle,
+            style: const TextStyle(color: kTextPrimary)),
+        content: Text(
+          l10n.profileLogoutMessage,
+          style: const TextStyle(color: kTextSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: kTextMuted)),
+            child: Text(l10n.cancel, style: const TextStyle(color: kTextMuted)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -98,7 +100,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               backgroundColor: Colors.redAccent,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Log out'),
+            child: Text(l10n.profileLogout),
           ),
         ],
       ),
@@ -113,6 +115,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final auth = context.watch<AuthProvider>();
     final player = context.watch<PlayerProvider>();
     final tgHome = context.watch<TgHomeProvider>();
@@ -137,10 +140,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       icon: const Icon(Icons.arrow_back_rounded,
                           color: kTextPrimary),
                     ),
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'Profile',
-                        style: TextStyle(
+                        l10n.profileTitle,
+                        style: const TextStyle(
                           color: kTextPrimary,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -221,7 +224,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                     if (auth.isTelegramUser)
                       _sectionCard(
-                        title: 'Telegram Account',
+                        title: l10n.profileTelegramAccount,
                         icon: Icons.send_rounded,
                         child: _rowTile(
                           leading: const CircleAvatar(
@@ -231,13 +234,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           title: auth.telegramFullName.isNotEmpty
                               ? auth.telegramFullName
-                              : 'Telegram User',
-                          subtitle: 'Signed in via Telegram',
+                              : l10n.profileTelegramUser,
+                          subtitle: l10n.profileSignedInViaTelegram,
                         ),
                       )
                     else
                       _sectionCard(
-                        title: 'Account',
+                        title: l10n.profileAccount,
                         icon: Icons.email_outlined,
                         child: _rowTile(
                           leading: const CircleAvatar(
@@ -247,20 +250,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           title: auth.userEmail.isNotEmpty
                               ? auth.userEmail
-                              : 'Signed in',
-                          subtitle: 'Signed in with email',
+                              : l10n.profileSignedIn,
+                          subtitle: l10n.profileSignedInWithEmail,
                         ),
                       ),
 
                     const SizedBox(height: 14),
 
                     _sectionCard(
-                      title: 'Display Name',
+                      title: l10n.profileDisplayName,
                       icon: Icons.person_outline_rounded,
                       child: _editingNickname
                           ? _editRow(
                               controller: _nicknameCtrl,
-                              hint: 'New nickname',
+                              hint: l10n.profileNewNickname,
                               onSave: () async {
                                 final n = _nicknameCtrl.text.trim();
                                 if (n.isEmpty) return;
@@ -282,12 +285,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             )
                           : _rowTile(
                               title: displayName,
-                              subtitle: 'Shown on leaderboards',
+                              subtitle: l10n.profileShownOnLeaderboards,
                               trailing: TextButton(
                                 onPressed: () =>
                                     setState(() => _editingNickname = true),
-                                child: const Text('Edit',
-                                    style: TextStyle(color: kAccentCyan)),
+                                child: Text(l10n.profileEdit,
+                                    style: const TextStyle(color: kAccentCyan)),
                               ),
                             ),
                     ),
@@ -295,13 +298,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 14),
 
                     _sectionCard(
-                      title: 'Coins',
+                      title: l10n.profileCoins,
                       icon: Icons.monetization_on_outlined,
                       child: _rowTile(
                         leading: const Icon(Icons.monetization_on,
                             color: kAccentGold, size: 28),
-                        title: '${tgHome.coins} coins',
-                        subtitle: 'Earn by playing challenges',
+                        title: l10n.coinsAmount(tgHome.coins),
+                        subtitle: l10n.profileCoinsHint,
                       ),
                     ),
 
@@ -315,7 +318,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           border: Border.all(
                               color: Colors.redAccent.withAlpha(40)),
                         ),
-                        child: Text(auth.errorMessage!,
+                        child: Text(l10n.tr(auth.errorMessage!),
                             style: const TextStyle(color: Colors.redAccent)),
                       ),
                     ],
@@ -323,7 +326,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     if (kIsWeb) ...[
                       const SizedBox(height: 14),
                       _sectionCard(
-                        title: 'App Update',
+                        title: l10n.profileAppUpdate,
                         icon: Icons.system_update_rounded,
                         child: InkWell(
                           onTap: () => _confirmClearCache(context),
@@ -331,9 +334,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: _rowTile(
                             leading: const Icon(Icons.cached_rounded,
                                 color: kAccentGold),
-                            title: 'Clear Cache & Reload',
-                            subtitle:
-                                'Clears cached files and reloads the latest version',
+                            title: l10n.profileClearCacheTitle,
+                            subtitle: l10n.profileClearCacheSubtitle,
                             trailing: const Icon(Icons.chevron_right_rounded,
                                 color: kTextMuted),
                           ),
@@ -344,7 +346,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     if (auth.isAdmin) ...[
                       const SizedBox(height: 14),
                       _sectionCard(
-                        title: 'Admin',
+                        title: l10n.profileAdmin,
                         icon: Icons.admin_panel_settings_rounded,
                         child: InkWell(
                           onTap: () {
@@ -360,8 +362,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             leading: const Icon(
                                 Icons.admin_panel_settings_rounded,
                                 color: kAccentPurple),
-                            title: 'Admin Panel',
-                            subtitle: 'Manage challenges and leaderboards',
+                            title: l10n.adminPanel,
+                            subtitle: l10n.profileAdminSubtitle,
                             trailing: const Icon(Icons.chevron_right_rounded,
                                 color: kTextMuted),
                           ),
@@ -377,9 +379,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: OutlinedButton.icon(
                           onPressed: () => _confirmLogout(context),
                           icon: const Icon(Icons.logout_rounded, size: 20),
-                          label: const Text(
-                            'Log out',
-                            style: TextStyle(
+                          label: Text(
+                            l10n.profileLogout,
+                            style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
                             ),

@@ -47,6 +47,7 @@ class ChallengeProvider extends ChangeNotifier {
   int? get lastCorrectAnswer => _lastCorrectAnswer;
   Result? get finalResult => _finalResult;
   bool get isLoadingChallenges => _isLoadingChallenges;
+  /// Localization key; render with `AppLocalizations.tr`.
   String? get loadError => _loadError;
   double get timerProgress {
     if (_totalTimePerQuestionMs == 0) return 1.0;
@@ -93,7 +94,7 @@ class ChallengeProvider extends ChangeNotifier {
           await rootBundle.loadString('assets/data/challenges.json');
       _challenges = ChallengeDefinition.listFromJson(jsonString);
     } catch (e) {
-      _loadError = 'Failed to load challenges';
+      _loadError = 'errLoadChallengesFailed';
     }
   }
 

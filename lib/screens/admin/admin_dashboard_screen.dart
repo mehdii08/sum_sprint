@@ -50,8 +50,8 @@ class AdminDashboardScreen extends StatelessWidget {
         children: [
           _Card(
             icon: Icons.calculate_rounded,
-            title: 'Challenges',
-            subtitle: 'Manage challenges shown on the home screen',
+            title: l10n.adminChallenges,
+            subtitle: l10n.adminChallengesSubtitle,
             color: const Color(0xFF1A237E),
             onTap: () => Navigator.push(
               context,
@@ -60,8 +60,8 @@ class AdminDashboardScreen extends StatelessWidget {
           ),
           _Card(
             icon: Icons.leaderboard,
-            title: 'Custom Leaderboards',
-            subtitle: 'Manage time-based leaderboards with date ranges and rewards',
+            title: l10n.adminCustomLeaderboards,
+            subtitle: l10n.adminCustomLeaderboardsSubtitle,
             color: Colors.teal,
             onTap: () => Navigator.push(
               context,

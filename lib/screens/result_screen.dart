@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/result.dart';
 import '../models/challenge_definition.dart';
+import '../l10n/app_localizations.dart';
 import '../providers/result_provider.dart';
 import '../providers/challenge_provider.dart';
 import '../providers/mind_timer_provider.dart';
@@ -53,6 +54,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return PopScope(
       canPop: false,
       child: Container(
@@ -63,8 +65,8 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
             backgroundColor: Colors.transparent,
             elevation: 0,
             automaticallyImplyLeading: false,
-            title: const Text('Results',
-                style: TextStyle(color: kTextPrimary, fontWeight: FontWeight.bold)),
+            title: Text(l10n.resultTitle,
+                style: const TextStyle(color: kTextPrimary, fontWeight: FontWeight.bold)),
             actions: const [
               BalanceBarChips(),
             ],
@@ -79,8 +81,9 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                   children: [
                     _TrophyHeader(result: widget.result, challenge: widget.challenge),
                     const SizedBox(height: 24),
-                    const Text('CHALLENGE COMPLETE!',
-                        style: TextStyle(color: kTextPrimary, fontSize: 26, fontWeight: FontWeight.bold)),
+                    Text(l10n.challengeComplete.toUpperCase(),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: kTextPrimary, fontSize: 26, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
                     _GradeBadge(result: widget.result),
                     const SizedBox(height: 24),
@@ -102,13 +105,13 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                                 borderRadius: BorderRadius.circular(20),
                                 boxShadow: [BoxShadow(color: kAccentGold.withAlpha(40), blurRadius: 16)],
                               ),
-                              child: const Row(
+                              child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text('🎉', style: TextStyle(fontSize: 20)),
-                                  SizedBox(width: 8),
-                                  Text('NEW PERSONAL BEST!',
-                                      style: TextStyle(color: kTextPrimary, fontWeight: FontWeight.w800, fontSize: 15, letterSpacing: 0.8)),
+                                  const Text('🎉', style: TextStyle(fontSize: 20)),
+                                  const SizedBox(width: 8),
+                                  Text(l10n.resultNewPersonalBest.toUpperCase(),
+                                      style: const TextStyle(color: kTextPrimary, fontWeight: FontWeight.w800, fontSize: 15, letterSpacing: 0.8)),
                                 ],
                               ),
                             ),
@@ -118,7 +121,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                       },
                     ),
                     _PrimaryButton(
-                      label: 'PLAY AGAIN',
+                      label: l10n.playAgain.toUpperCase(),
                       icon: Icons.replay_rounded,
                       color: kAccentPurple,
                       onPressed: () {
@@ -143,7 +146,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                     ),
                     const SizedBox(height: 12),
                     _SecondaryButton(
-                      label: 'GO TO HUB',
+                      label: l10n.resultGoToHub.toUpperCase(),
                       icon: Icons.home_rounded,
                       onPressed: () {
                         context.read<ChallengeProvider>().reset();
@@ -234,7 +237,7 @@ class _GradeBadge extends StatelessWidget {
             ? kAccentCyan
             : kTextMuted;
 
-    return Text('GRADE: $grade',
+    return Text(AppLocalizations.of(context).resultGrade(grade).toUpperCase(),
         style: TextStyle(color: color, fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 2.0));
   }
 }
@@ -284,8 +287,8 @@ class _ScoreCardState extends State<_ScoreCard> with SingleTickerProviderStateMi
       ),
       child: Column(
         children: [
-          const Text('TOTAL POINTS EARNED',
-              style: TextStyle(color: kTextSecondary, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 1.5)),
+          Text(AppLocalizations.of(context).resultTotalPoints.toUpperCase(),
+              style: const TextStyle(color: kTextSecondary, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 1.5)),
           const SizedBox(height: 12),
           AnimatedBuilder(
             animation: _countAnim,
@@ -307,41 +310,44 @@ class _StatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final totalSeconds =
+        l10n.secondsShort((result.totalResponseTimeMs / 1000).toStringAsFixed(1));
     return Row(
       children: result.isTicTacToe
           ? [
               _StatCard(icon: Icons.emoji_events_rounded, color: Colors.greenAccent,
-                  value: '${result.roundsWon}/${result.totalRounds}', label: 'Wins'),
+                  value: '${result.roundsWon}/${result.totalRounds}', label: l10n.ticTacToeWinsStat),
               _StatCard(icon: Icons.handshake_rounded, color: kAccentGold,
-                  value: '${result.roundsDrawn}', label: 'Draws'),
+                  value: '${result.roundsDrawn}', label: l10n.ticTacToeDrawsStat),
               _StatCard(icon: Icons.timer_rounded, color: kAccentPurple,
-                  value: '${(result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s', label: 'Time'),
+                  value: totalSeconds, label: l10n.statTime),
             ]
           : result.isPairHunt
               ? [
                   _StatCard(icon: Icons.grid_view_rounded, color: Colors.greenAccent,
-                      value: '${result.pairsFound}/${result.totalPairs}', label: 'Pairs'),
+                      value: '${result.pairsFound}/${result.totalPairs}', label: l10n.pairHuntPairsFoundStat),
                   _StatCard(icon: Icons.warning_amber_rounded, color: kAccentGold,
-                      value: '${result.mismatchCount}', label: 'Misses'),
+                      value: '${result.mismatchCount}', label: l10n.pairHuntMismatchStat),
                   _StatCard(icon: Icons.timer_rounded, color: kAccentPurple,
-                      value: '${(result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s', label: 'Time'),
+                      value: totalSeconds, label: l10n.statTime),
                 ]
               : result.isMindTimer
                   ? [
                       _StatCard(icon: Icons.check_circle_rounded, color: Colors.greenAccent,
-                          value: '${result.withinRangeCount}/${challenge.questionCount}', label: 'On Range'),
+                          value: '${result.withinRangeCount}/${challenge.questionCount}', label: l10n.statOnRange),
                       _StatCard(icon: Icons.speed_rounded, color: kAccentCyan,
-                          value: '${(result.averageAccuracy * 100).toStringAsFixed(0)}%', label: 'Accuracy'),
+                          value: '${(result.averageAccuracy * 100).toStringAsFixed(0)}%', label: l10n.statAccuracy),
                       _StatCard(icon: Icons.timer_rounded, color: kAccentPurple,
-                          value: '${(result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s', label: 'Time'),
+                          value: totalSeconds, label: l10n.statTime),
                     ]
                   : [
                       _StatCard(icon: Icons.check_circle_rounded, color: Colors.greenAccent,
-                          value: '${result.correctCount}/${challenge.questionCount}', label: 'Correct'),
+                          value: '${result.correctCount}/${challenge.questionCount}', label: l10n.correctStat),
                       _StatCard(icon: Icons.timer_rounded, color: kAccentCyan,
-                          value: result.averageTimeSeconds.toStringAsFixed(1), label: 'Avg Time'),
+                          value: result.averageTimeSeconds.toStringAsFixed(1), label: l10n.statAvgTime),
                       _StatCard(icon: Icons.speed_rounded, color: kAccentPurple,
-                          value: '${(result.totalResponseTimeMs / 1000).toStringAsFixed(1)}s', label: 'Total'),
+                          value: totalSeconds, label: l10n.statTotal),
                     ],
     );
   }

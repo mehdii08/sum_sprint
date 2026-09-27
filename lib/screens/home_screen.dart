@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../l10n/app_localizations.dart';
 import '../providers/auth_provider.dart';
 import '../providers/challenge_provider.dart';
 import '../providers/tg_home_provider.dart';
@@ -138,7 +139,7 @@ class _HomeTabState extends State<_HomeTab> with SingleTickerProviderStateMixin 
                             ? Center(
                                 child: Padding(
                                   padding: const EdgeInsets.all(24),
-                                  child: Text(challengeProvider.loadError!,
+                                  child: Text(AppLocalizations.of(context).tr(challengeProvider.loadError!),
                                       style: const TextStyle(color: Colors.red), textAlign: TextAlign.center),
                                 ),
                               )
@@ -188,7 +189,8 @@ class _SectionTitle extends StatelessWidget {
             child: const Icon(Icons.sports_esports_rounded, color: Colors.white, size: 18),
           ),
           const SizedBox(width: 12),
-          const Text('CHALLENGES', style: TextStyle(color: _accentPurple, fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 1.5)),
+          Text(AppLocalizations.of(context).homeChallenges.toUpperCase(),
+              style: const TextStyle(color: _accentPurple, fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 1.5)),
         ],
       ),
     );
@@ -216,6 +218,7 @@ class _ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
       child: Row(
@@ -247,7 +250,7 @@ class _ProfileHeader extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(name.isNotEmpty ? name : 'Player',
+                        Text(name.isNotEmpty ? name : l10n.playerFallback,
                             style: const TextStyle(color: _textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
                             overflow: TextOverflow.ellipsis),
                         if (username != null)
@@ -265,7 +268,7 @@ class _ProfileHeader extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.admin_panel_settings_rounded, color: _accentCyan, size: 22),
               onPressed: onAdminTap,
-              tooltip: 'Admin Panel',
+              tooltip: l10n.adminPanel,
               visualDensity: VisualDensity.compact,
             ),
           ],
@@ -330,11 +333,19 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> with Singl
     return Icons.calculate_rounded;
   }
 
-  String get _difficultyLabel {
-    if (widget.challenge.isMindTimer) return 'Timing';
-    if (widget.challenge.isPairHunt) return 'Memory';
-    if (widget.challenge.isTicTacToe) return 'Strategy';
-    return 'Math Speed';
+  String _categoryLabel(AppLocalizations l10n) {
+    if (widget.challenge.isMindTimer) return l10n.homeCategoryTiming;
+    if (widget.challenge.isPairHunt) return l10n.homeCategoryMemory;
+    if (widget.challenge.isTicTacToe) return l10n.homeCategoryStrategy;
+    return l10n.homeCategoryMath;
+  }
+
+  String _lengthLabel(AppLocalizations l10n) {
+    final c = widget.challenge;
+    if (c.isTicTacToe) return l10n.homeRounds(3);
+    if (c.isPairHunt) return l10n.homePairs(6);
+    if (c.isMindTimer) return l10n.homeStops(c.questionCount);
+    return l10n.homeQuestions(c.questionCount);
   }
 
   Color get _difficultyColor {
@@ -355,8 +366,9 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> with Singl
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final isFree = widget.challenge.isFree;
-    final entryLabel = isFree ? 'FREE' : '${widget.challenge.entryCoins}';
+    final entryLabel = '${widget.challenge.entryCoins}';
 
     return AnimatedBuilder(
       animation: _slideAnim,
@@ -425,14 +437,14 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> with Singl
                                   const SizedBox(height: 4),
                                   Row(
                                     children: [
-                                      Text(_difficultyLabel, style: TextStyle(color: _difficultyColor, fontSize: 12, fontWeight: FontWeight.w600)),
+                                      Text(_categoryLabel(l10n), style: TextStyle(color: _difficultyColor, fontSize: 12, fontWeight: FontWeight.w600)),
                                       Container(
                                         margin: const EdgeInsets.symmetric(horizontal: 8),
                                         width: 3, height: 3,
                                         decoration: const BoxDecoration(color: _textMuted, shape: BoxShape.circle),
                                       ),
                                       Text(
-                                        isFree ? 'Free' : '$entryLabel coins',
+                                        isFree ? l10n.free : l10n.coinsAmount(entryLabel),
                                         style: TextStyle(
                                           color: isFree ? const Color(0xFF34D399) : _accentGold,
                                           fontSize: 12,
@@ -445,13 +457,7 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> with Singl
                                         decoration: const BoxDecoration(color: _textMuted, shape: BoxShape.circle),
                                       ),
                                       Text(
-                                        widget.challenge.isTicTacToe
-                                            ? '3 Rounds'
-                                            : widget.challenge.isPairHunt
-                                                ? '6 Pairs'
-                                                : widget.challenge.isMindTimer
-                                                    ? '${widget.challenge.questionCount} Stops'
-                                                    : '${widget.challenge.questionCount} Qs',
+                                        _lengthLabel(l10n),
                                         style: const TextStyle(color: _textSecondary, fontSize: 12),
                                       ),
                                     ],
@@ -466,13 +472,22 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> with Singl
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(color: (isFree ? const Color(0xFF34D399) : _accentGold).withAlpha(60)),
                               ),
-                              child: Text(
-                                isFree ? 'Free' : entryLabel,
-                                style: TextStyle(
-                                  color: isFree ? const Color(0xFF34D399) : _accentGold,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (!isFree) ...[
+                                    const Icon(Icons.monetization_on_rounded, color: _accentGold, size: 13),
+                                    const SizedBox(width: 4),
+                                  ],
+                                  Text(
+                                    isFree ? l10n.free : entryLabel,
+                                    style: TextStyle(
+                                      color: isFree ? const Color(0xFF34D399) : _accentGold,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -481,14 +496,6 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> with Singl
                         Row(
                           children: [
                             _MiniStat(icon: Icons.star_rounded, value: '${widget.challenge.maxPoints}', color: _accentGold),
-                            const SizedBox(width: 16),
-                            _MiniStat(
-                              icon: Icons.timer_rounded,
-                              value: widget.challenge.isMindTimer
-                                  ? '${widget.challenge.targetSeconds}s'
-                                  : '${widget.challenge.timeLimitSeconds}s',
-                              color: _textSecondary,
-                            ),
                             const Spacer(),
                             SizedBox(
                               height: 34,
@@ -499,7 +506,9 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> with Singl
                                   size: 18,
                                 ),
                                 label: Text(
-                                  isFree ? 'PLAY' : 'PLAY · $entryLabel',
+                                  isFree
+                                      ? l10n.play.toUpperCase()
+                                      : '${l10n.play.toUpperCase()} · $entryLabel',
                                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.0),
                                 ),
                                 style: ElevatedButton.styleFrom(
@@ -559,6 +568,7 @@ class _FloatingLeaderboardPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return GestureDetector(
       onTap: () => _openFull(context),
       child: Container(
@@ -600,23 +610,23 @@ class _FloatingLeaderboardPanel extends StatelessWidget {
                   color: _textPrimary, size: 22),
             ),
             const SizedBox(width: 12),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Leaderboards',
-                    style: TextStyle(
+                    l10n.homeLeaderboards,
+                    style: const TextStyle(
                       color: _textPrimary,
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
-                    'See global rankings and event boards',
-                    style: TextStyle(
+                    l10n.homeLeaderboardsSubtitle,
+                    style: const TextStyle(
                       color: _textSecondary,
                       fontSize: 12,
                     ),

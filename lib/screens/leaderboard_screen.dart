@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../l10n/app_localizations.dart';
 import '../models/custom_leaderboard.dart';
 import '../repositories/leaderboard_repository.dart';
 import '../providers/auth_provider.dart';
@@ -80,8 +81,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               onPressed: () => Navigator.pop(context),
             ),
             centerTitle: true,
-            title: const Text('LEADERBOARD',
-                style: TextStyle(color: kTextPrimary, fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: 2.0)),
+            title: Text(AppLocalizations.of(context).leaderboardTitle.toUpperCase(),
+                style: const TextStyle(color: kTextPrimary, fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: 2.0)),
             actions: [
               Padding(
                 padding: const EdgeInsets.only(right: 12),
@@ -125,7 +126,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                     padding: const EdgeInsets.all(4),
                     splashFactory: NoSplash.splashFactory,
                     tabs: [
-                      const Tab(text: 'Global'),
+                      Tab(text: AppLocalizations.of(context).leaderboardGlobal),
                       for (final lb in _customLeaderboards) Tab(text: lb.title),
                     ],
                   ),
@@ -449,14 +450,15 @@ class _CustomLeaderboardTabState extends State<_CustomLeaderboardTab> with Singl
   }
 
   String _formatDuration(Duration d) {
-    if (d.isNegative) return 'Ended';
+    final l10n = AppLocalizations.of(context);
+    if (d.isNegative) return l10n.leaderboardEnded;
     final days = d.inDays;
     final hours = d.inHours % 24;
     final mins = d.inMinutes % 60;
     final parts = <String>[];
-    if (days > 0) parts.add('${days}D');
-    if (hours > 0) parts.add('${hours}H');
-    parts.add('${mins}M');
+    if (days > 0) parts.add(l10n.durationDays(days));
+    if (hours > 0) parts.add(l10n.durationHours(hours));
+    parts.add(l10n.durationMinutes(mins));
     return parts.join(' ');
   }
 }
@@ -471,6 +473,7 @@ class _EventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Container(
@@ -516,14 +519,15 @@ class _EventCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: kAccentGold.withAlpha(30)),
                     ),
-                    child: const Text('ACTIVE', style: TextStyle(color: kAccentGold, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
+                    child: Text(l10n.leaderboardActive.toUpperCase(),
+                        style: const TextStyle(color: kAccentGold, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
                   ),
                 ],
               ),
               const SizedBox(height: 14),
               Text(title, style: const TextStyle(color: kTextPrimary, fontSize: 22, fontWeight: FontWeight.bold)),
               const SizedBox(height: 4),
-              Text('Top players win exclusive rewards',
+              Text(l10n.leaderboardRewardsHint,
                   style: TextStyle(color: kAccentGold.withAlpha(180), fontSize: 13)),
               if (rewards != null && rewards!.isNotEmpty) ...[
                 const SizedBox(height: 12),
@@ -744,7 +748,8 @@ class _PremiumRankingTileState extends State<_PremiumRankingTile> with SingleTic
                 Text('${entry.totalScore}',
                     style: TextStyle(color: isTop3 ? color : kTextPrimary, fontSize: 16, fontWeight: FontWeight.w800)),
                 const SizedBox(width: 4),
-                const Text('PTS', style: TextStyle(color: kTextMuted, fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 1.0)),
+                Text(AppLocalizations.of(context).pointsShort.toUpperCase(),
+                    style: const TextStyle(color: kTextMuted, fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 1.0)),
               ],
             ),
           ),
@@ -823,7 +828,8 @@ class _StickyUserCard extends StatelessWidget {
               children: [
                 Text('${entry.totalScore}',
                     style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.w800)),
-                const Text('POINTS', style: TextStyle(color: kTextMuted, fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 1.2)),
+                Text(AppLocalizations.of(context).points.toUpperCase(),
+                    style: const TextStyle(color: kTextMuted, fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 1.2)),
               ],
             ),
           ],
@@ -840,6 +846,7 @@ class _LeaderboardEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -857,10 +864,10 @@ class _LeaderboardEmptyState extends StatelessWidget {
               child: const Icon(Icons.emoji_events_rounded, color: kAccentGold, size: 48),
             ),
             const SizedBox(height: 24),
-            const Text('No Rankings Yet',
-                style: TextStyle(color: kTextPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(l10n.leaderboardEmptyTitle,
+                style: const TextStyle(color: kTextPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text('Be the first player to compete and\nclaim the top spot.',
+            Text(l10n.leaderboardEmptyMessage,
                 style: TextStyle(color: kTextSecondary, fontSize: 14), textAlign: TextAlign.center),
             const SizedBox(height: 24),
             SizedBox(
@@ -873,7 +880,8 @@ class _LeaderboardEmptyState extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 32),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
-                child: const Text('Play Now', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                child: Text(l10n.leaderboardPlayNow,
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
               ),
             ),
           ],

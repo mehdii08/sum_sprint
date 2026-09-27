@@ -13,6 +13,7 @@ class TgHomeProvider extends ChangeNotifier {
 
   bool get isLoadingProfile => _isLoadingProfile;
   Map<String, dynamic>? get profile => _profile;
+  /// Localization key; render with `AppLocalizations.tr`.
   String? get errorMessage => _errorMessage;
 
   int get totalScore => _profile?['total_score'] as int? ?? 0;
@@ -50,8 +51,8 @@ class TgHomeProvider extends ChangeNotifier {
       return coinsLeft;
     } catch (e) {
       _errorMessage = e.toString().contains('Insufficient coins')
-          ? 'Not enough coins'
-          : 'Could not start challenge';
+          ? 'errNotEnoughCoins'
+          : 'errStartChallengeFailed';
       debugPrint('[TgHome] payChallengeEntry error: $e');
       notifyListeners();
       return null;
@@ -77,7 +78,7 @@ class TgHomeProvider extends ChangeNotifier {
         _profile = Map<String, dynamic>.from(resp as Map);
       }
     } catch (e) {
-      _errorMessage = 'Failed to load profile';
+      _errorMessage = 'errLoadProfileFailed';
       debugPrint('[TgHome] loadProfile error: $e');
     } finally {
       _isLoadingProfile = false;

@@ -128,8 +128,8 @@ class _PairHuntGameScreenState extends State<PairHuntGameScreen> {
                             ),
                       label: Text(
                         widget.challenge.isFree
-                            ? 'START GAME'
-                            : 'START · ${widget.challenge.entryCoins}',
+                            ? l10n.startGame.toUpperCase()
+                            : l10n.startWithCost(widget.challenge.entryCoins).toUpperCase(),
                         style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: 1.2),
                       ),
                       style: ElevatedButton.styleFrom(
@@ -175,8 +175,8 @@ class _PairHuntGameScreenState extends State<PairHuntGameScreen> {
                     color: _phAmber.withAlpha(15),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text('Flip cards. Find matching pairs. Clear the board.',
-                      style: TextStyle(color: _phAmber, fontSize: 12, fontWeight: FontWeight.w600)),
+                  child: Text(l10n.pairHuntIntroBadge,
+                      style: const TextStyle(color: _phAmber, fontSize: 12, fontWeight: FontWeight.w600)),
                 ),
                 const SizedBox(height: 16),
                 SizedBox(
@@ -224,16 +224,16 @@ class _PairHuntGameScreenState extends State<PairHuntGameScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          const Text('Match the pairs. Beat the clock.',
-              style: TextStyle(color: kTextPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(l10n.pairHuntIntroTitle,
+              style: const TextStyle(color: kTextPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          const Text('Flip cards to find matching pairs.\nClear all pairs before time runs out!',
-              textAlign: TextAlign.center, style: TextStyle(color: kTextSecondary, fontSize: 13)),
+          Text(l10n.pairHuntIntroSubtitle,
+              textAlign: TextAlign.center, style: const TextStyle(color: kTextSecondary, fontSize: 13)),
           const SizedBox(height: 20),
           Wrap(spacing: 10, runSpacing: 10, children: [
-            _InfoPill(icon: Icons.grid_view_rounded, text: '${challenge.blockCount} Blocks', color: _phAmber),
-            _InfoPill(icon: Icons.timer_rounded, text: '${challenge.timeLimitSeconds}s', color: _phCyan),
-            _InfoPill(icon: Icons.star_rounded, text: '${challenge.maxPoints} Max', color: _phGold),
+            _InfoPill(icon: Icons.grid_view_rounded, text: l10n.pillBlocks(challenge.blockCount), color: _phAmber),
+            _InfoPill(icon: Icons.timer_rounded, text: l10n.secondsShort(challenge.timeLimitSeconds), color: _phCyan),
+            _InfoPill(icon: Icons.star_rounded, text: l10n.pillMax(challenge.maxPoints), color: _phGold),
           ]),
           const SizedBox(height: 16),
           _buildInfoRow(l10n.pairHuntPairs, '${challenge.pairCount} ${l10n.pairHuntPairsLabel}', Icons.grid_view_rounded),
@@ -457,6 +457,7 @@ class _PairHuntGameScreenState extends State<PairHuntGameScreen> {
   }
 
   Widget _buildMismatchFeedback(PairHuntProvider provider) {
+    final l10n = AppLocalizations.of(context);
     return AnimatedOpacity(
       opacity: provider.isShowingMismatch ? 1.0 : 0.0,
       duration: const Duration(milliseconds: 200),
@@ -467,13 +468,13 @@ class _PairHuntGameScreenState extends State<PairHuntGameScreen> {
           borderRadius: BorderRadius.circular(14),
           boxShadow: [BoxShadow(color: Colors.redAccent.withAlpha(40), blurRadius: 8)],
         ),
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.close_rounded, color: kTextPrimary, size: 18),
-            SizedBox(width: 8),
-            Text('NO MATCH — TRY AGAIN',
-                style: TextStyle(color: kTextPrimary, fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+            const Icon(Icons.close_rounded, color: kTextPrimary, size: 18),
+            const SizedBox(width: 8),
+            Text(l10n.pairHuntNoMatch.toUpperCase(),
+                style: const TextStyle(color: kTextPrimary, fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
           ],
         ),
       ),

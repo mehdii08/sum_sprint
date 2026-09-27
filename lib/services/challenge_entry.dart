@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../l10n/app_localizations.dart';
 import '../models/challenge_definition.dart';
 import '../providers/tg_home_provider.dart';
 import '../theme/app_theme.dart';
@@ -11,6 +12,7 @@ Future<bool> payChallengeEntry(
 ) async {
   if (challenge.isFree) return true;
 
+  final l10n = AppLocalizations.of(context);
   final tgHome = context.read<TgHomeProvider>();
   final cost = challenge.entryCoins;
 
@@ -18,7 +20,7 @@ Future<bool> payChallengeEntry(
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Need $cost coins (you have ${tgHome.coins})'),
+          content: Text(l10n.entryNeedCoins(cost, tgHome.coins)),
           backgroundColor: Colors.red.shade700,
         ),
       );
@@ -30,15 +32,15 @@ Future<bool> payChallengeEntry(
     context: context,
     builder: (ctx) => AlertDialog(
       backgroundColor: kSurfaceDark,
-      title: const Text('Start challenge?', style: TextStyle(color: kTextPrimary)),
+      title: Text(l10n.entryStartTitle, style: const TextStyle(color: kTextPrimary)),
       content: Text(
-        'This costs $cost coins. You have ${tgHome.coins}.',
+        l10n.entryCostMessage(cost, tgHome.coins),
         style: const TextStyle(color: kTextSecondary),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx, false),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(ctx, true),
@@ -46,7 +48,7 @@ Future<bool> payChallengeEntry(
             backgroundColor: kAccentPurple,
             foregroundColor: Colors.white,
           ),
-          child: Text('Pay $cost'),
+          child: Text(l10n.entryPay(cost)),
         ),
       ],
     ),
@@ -59,7 +61,7 @@ Future<bool> payChallengeEntry(
   if (remaining == null) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(tgHome.errorMessage ?? 'Could not start challenge'),
+        content: Text(l10n.tr(tgHome.errorMessage ?? 'errStartChallengeFailed')),
         backgroundColor: Colors.red.shade700,
       ),
     );

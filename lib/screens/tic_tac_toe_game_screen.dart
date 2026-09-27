@@ -119,8 +119,8 @@ class _TicTacToeGameScreenState extends State<TicTacToeGameScreen> {
                             ),
                       label: Text(
                         widget.challenge.isFree
-                            ? 'START GAME'
-                            : 'START · ${widget.challenge.entryCoins}',
+                            ? l10n.startGame.toUpperCase()
+                            : l10n.startWithCost(widget.challenge.entryCoins).toUpperCase(),
                         style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: 1.2),
                       ),
                       style: ElevatedButton.styleFrom(
@@ -166,8 +166,8 @@ class _TicTacToeGameScreenState extends State<TicTacToeGameScreen> {
                     color: _tttCyan.withAlpha(15),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text('PLACE 3 IN A ROW TO WIN!',
-                      style: TextStyle(color: _tttCyan, fontSize: 12, fontWeight: FontWeight.w700)),
+                  child: Text(l10n.ticTacToeIntroBadge.toUpperCase(),
+                      style: const TextStyle(color: _tttCyan, fontSize: 12, fontWeight: FontWeight.w700)),
                 ),
                 const SizedBox(height: 20),
                 SizedBox(
@@ -190,20 +190,20 @@ class _TicTacToeGameScreenState extends State<TicTacToeGameScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          const Text('Classic Rules. Neon Battle.',
-              style: TextStyle(color: kTextPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(l10n.ticTacToeIntroTitle,
+              style: const TextStyle(color: kTextPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          const Text('Outsmart your opponent in a glowing duel of wits.\nThe first to connect three marks wins the round.',
+          Text(l10n.ticTacToeIntroSubtitle,
               textAlign: TextAlign.center,
-              style: TextStyle(color: kTextSecondary, fontSize: 13)),
+              style: const TextStyle(color: kTextSecondary, fontSize: 13)),
           const SizedBox(height: 20),
           Wrap(
             spacing: 10,
             runSpacing: 10,
             children: [
-              _InfoPill(icon: Icons.groups_rounded, text: '2 Players', color: _tttCyan),
-              _InfoPill(icon: Icons.emoji_events_rounded, text: 'Best of 3', color: _tttPink),
-              _InfoPill(icon: Icons.timer_rounded, text: '${challenge.timeLimitSeconds}s/Round', color: kAccentGold),
+              _InfoPill(icon: Icons.groups_rounded, text: l10n.pillPlayers(2), color: _tttCyan),
+              _InfoPill(icon: Icons.emoji_events_rounded, text: l10n.pillBestOf(3), color: _tttPink),
+              _InfoPill(icon: Icons.timer_rounded, text: l10n.pillSecondsPerRound(challenge.timeLimitSeconds), color: kAccentGold),
             ],
           ),
           const SizedBox(height: 16),
@@ -423,7 +423,7 @@ class _TicTacToeGameScreenState extends State<TicTacToeGameScreen> {
           children: [
             Icon(Icons.close_rounded, color: _tttCyan, size: 20),
             const SizedBox(width: 8),
-            const Text('YOUR TURN', style: TextStyle(color: _tttCyan, fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 1.0)),
+            Text(l10n.ticTacToeYourTurnShort.toUpperCase(), style: const TextStyle(color: _tttCyan, fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 1.0)),
           ],
         ),
       );

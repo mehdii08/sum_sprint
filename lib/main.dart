@@ -41,7 +41,7 @@ class SumSprintApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => TgHomeProvider()),
       ],
       child: MaterialApp(
-        title: 'Sum Sprint',
+        onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
         debugShowCheckedModeBanner: false,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,

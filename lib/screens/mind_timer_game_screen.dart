@@ -158,7 +158,7 @@ class _MindTimerGameScreenState extends State<MindTimerGameScreen> with TickerPr
             children: [
               const Icon(Icons.timer_rounded, color: _mtEmeraldLight, size: 16),
               const SizedBox(width: 6),
-              Text('ROUND ${provider.questionIndex}/${provider.totalQuestions}',
+              Text(l10n.roundProgress(provider.questionIndex, provider.totalQuestions).toUpperCase(),
                   style: const TextStyle(color: _mtEmeraldLight, fontSize: 13, fontWeight: FontWeight.w700)),
             ],
           ),
@@ -204,7 +204,7 @@ class _MindTimerGameScreenState extends State<MindTimerGameScreen> with TickerPr
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text('SEE TARGET', style: TextStyle(color: kTextMuted, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 2.0)),
+        Text(l10n.mindTimerSeeTarget.toUpperCase(), style: const TextStyle(color: kTextMuted, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 2.0)),
         const SizedBox(height: 16),
         Container(
           width: 180,
@@ -221,7 +221,8 @@ class _MindTimerGameScreenState extends State<MindTimerGameScreen> with TickerPr
               Text(question.targetSeconds.toStringAsFixed(1),
                   style: const TextStyle(color: _mtEmeraldLight, fontSize: 56, fontWeight: FontWeight.w900)),
               const SizedBox(height: 4),
-              const Text('s', style: TextStyle(color: _mtEmeraldLight, fontSize: 20, fontWeight: FontWeight.w300)),
+              Text(l10n.secondsUnit,
+                  style: const TextStyle(color: _mtEmeraldLight, fontSize: 20, fontWeight: FontWeight.w300)),
             ],
           ),
         ),
@@ -283,8 +284,8 @@ class _MindTimerGameScreenState extends State<MindTimerGameScreen> with TickerPr
                         const SizedBox(height: 2),
                         Text(
                           (!_entryPaid && !widget.challenge.isFree)
-                              ? 'START · ${widget.challenge.entryCoins}'
-                              : 'START',
+                              ? l10n.startWithCost(widget.challenge.entryCoins).toUpperCase()
+                              : l10n.mindTimerStart.toUpperCase(),
                           style: const TextStyle(color: kTextPrimary, fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1.5),
                         ),
                       ],
@@ -296,8 +297,8 @@ class _MindTimerGameScreenState extends State<MindTimerGameScreen> with TickerPr
           ),
         ),
         const SizedBox(height: 16),
-        const Text('TIMER HIDES WHEN YOU TAP',
-            style: TextStyle(color: kTextMuted, fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 1.5)),
+        Text(l10n.mindTimerHidesHint.toUpperCase(),
+            style: const TextStyle(color: kTextMuted, fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 1.5)),
       ],
     );
   }
@@ -306,7 +307,7 @@ class _MindTimerGameScreenState extends State<MindTimerGameScreen> with TickerPr
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text('COUNTING...', style: TextStyle(color: kTextMuted, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 2.0)),
+        Text(l10n.mindTimerCounting.toUpperCase(), style: const TextStyle(color: kTextMuted, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 2.0)),
         const SizedBox(height: 24),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
@@ -315,11 +316,11 @@ class _MindTimerGameScreenState extends State<MindTimerGameScreen> with TickerPr
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: _mtEmerald.withAlpha(25)),
           ),
-          child: const Column(
+          child: Column(
             children: [
-              Text('Count in your mind.', style: TextStyle(color: kTextSecondary, fontSize: 15)),
-              SizedBox(height: 4),
-              Text('Stop when you feel the time.', style: TextStyle(color: kTextMuted, fontSize: 13)),
+              Text(l10n.mindTimerCountInMind, style: const TextStyle(color: kTextSecondary, fontSize: 15)),
+              const SizedBox(height: 4),
+              Text(l10n.mindTimerStopWhenFeel, style: const TextStyle(color: kTextMuted, fontSize: 13)),
             ],
           ),
         ),
@@ -336,12 +337,12 @@ class _MindTimerGameScreenState extends State<MindTimerGameScreen> with TickerPr
                 BoxShadow(color: Colors.redAccent.withAlpha(60), blurRadius: 24, spreadRadius: 4),
               ],
             ),
-            child: const Column(
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.stop_rounded, color: kTextPrimary, size: 44),
-                SizedBox(height: 2),
-                Text('STOP', style: TextStyle(color: kTextPrimary, fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
+                const Icon(Icons.stop_rounded, color: kTextPrimary, size: 44),
+                const SizedBox(height: 2),
+                Text(l10n.mindTimerStop.toUpperCase(), style: const TextStyle(color: kTextPrimary, fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
               ],
             ),
           ),

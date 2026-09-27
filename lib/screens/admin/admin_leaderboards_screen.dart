@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/custom_leaderboard.dart';
 
 class AdminLeaderboardsScreen extends StatefulWidget {
@@ -42,20 +43,20 @@ class _AdminLeaderboardsScreenState extends State<AdminLeaderboardsScreen> {
   }
 
   Future<void> _delete(String id) async {
+    final l10n = AppLocalizations.of(context);
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Leaderboard'),
-        content: const Text(
-            'Are you sure you want to delete this leaderboard? This cannot be undone.'),
+        title: Text(l10n.adminDeleteLeaderboardTitle),
+        content: Text(l10n.adminDeleteLeaderboardMsg),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
+              child: Text(l10n.adminCancel)),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(l10n.adminDelete),
           ),
         ],
       ),
@@ -79,7 +80,7 @@ class _AdminLeaderboardsScreenState extends State<AdminLeaderboardsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Custom Leaderboards'),
+        title: Text(AppLocalizations.of(context).adminCustomLeaderboards),
         backgroundColor: const Color(0xFF1A237E),
         foregroundColor: Colors.white,
       ),
@@ -143,6 +144,7 @@ class _LeaderboardCard extends StatelessWidget {
         now.isAfter(leaderboard.startDate) &&
         now.isBefore(leaderboard.endDate);
     final hasEnded = now.isAfter(leaderboard.endDate);
+    final l10n = AppLocalizations.of(context);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -184,10 +186,10 @@ class _LeaderboardCard extends StatelessWidget {
                   ),
                   child: Text(
                     isActive
-                        ? 'Active'
+                        ? l10n.adminActive
                         : hasEnded
-                            ? 'Ended'
-                            : 'Upcoming',
+                            ? l10n.adminEnded
+                            : l10n.adminUpcoming,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -205,11 +207,11 @@ class _LeaderboardCard extends StatelessWidget {
                     if (v == 'edit') onEdit();
                     if (v == 'delete') onDelete();
                   },
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(value: 'edit', child: Text('Edit')),
+                  itemBuilder: (_) => [
+                    PopupMenuItem(value: 'edit', child: Text(l10n.adminEdit)),
                     PopupMenuItem(
                         value: 'delete',
-                        child: Text('Delete', style: TextStyle(color: Colors.red))),
+                        child: Text(l10n.adminDelete, style: const TextStyle(color: Colors.red))),
                   ],
                 ),
               ],
@@ -326,7 +328,7 @@ class _LeaderboardFormScreenState extends State<_LeaderboardFormScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save: $e'),
+          SnackBar(content: Text(AppLocalizations.of(context).adminSaveFailed(e)),
               backgroundColor: Colors.red),
         );
       }
@@ -355,9 +357,10 @@ class _LeaderboardFormScreenState extends State<_LeaderboardFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Leaderboard' : 'New Leaderboard'),
+        title: Text(_isEditing ? l10n.adminEditLeaderboard : l10n.adminNewLeaderboard),
         backgroundColor: const Color(0xFF1A237E),
         foregroundColor: Colors.white,
       ),
@@ -370,23 +373,23 @@ class _LeaderboardFormScreenState extends State<_LeaderboardFormScreen> {
             children: [
               TextFormField(
                 controller: _titleCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Title',
-                  hintText: 'e.g. Weekly Challenge, Weekend Event',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.adminTitleLabel,
+                  hintText: l10n.adminTitleHint,
+                  border: const OutlineInputBorder(),
                 ),
                 validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Title is required' : null,
+                    (v == null || v.trim().isEmpty) ? l10n.adminTitleRequired : null,
               ),
               const SizedBox(height: 20),
-              const Text('Date Range',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+              Text(l10n.adminDateRange,
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
               const SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
                     child: _DateButton(
-                      label: 'Start',
+                      label: l10n.adminStartDate,
                       date: _startDate,
                       onTap: () => _pickDate(true),
                     ),
@@ -397,7 +400,7 @@ class _LeaderboardFormScreenState extends State<_LeaderboardFormScreen> {
                   ),
                   Expanded(
                     child: _DateButton(
-                      label: 'End',
+                      label: l10n.adminEndDate,
                       date: _endDate,
                       onTap: () => _pickDate(false),
                     ),
@@ -408,19 +411,18 @@ class _LeaderboardFormScreenState extends State<_LeaderboardFormScreen> {
               TextFormField(
                 controller: _rewardsCtrl,
                 maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Rewards (optional)',
-                  hintText: 'e.g. Top 3 win 1000 coins each',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.adminRewardsLabel,
+                  hintText: l10n.adminRewardsHint,
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 20),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Active',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: const Text(
-                    'Only active leaderboards appear in the app'),
+                title: Text(l10n.adminActive,
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Text(l10n.adminActiveLeaderboardHint),
                 value: _isActive,
                 activeTrackColor: const Color(0xFF1A237E),
                 onChanged: (v) => setState(() => _isActive = v),
@@ -444,7 +446,7 @@ class _LeaderboardFormScreenState extends State<_LeaderboardFormScreen> {
                               strokeWidth: 2, color: Colors.white),
                         )
                       : Text(
-                          _isEditing ? 'Update' : 'Create',
+                          _isEditing ? l10n.adminUpdate : l10n.adminCreate,
                           style: const TextStyle(
                               fontSize: 16, fontWeight: FontWeight.w600),
                         ),
@@ -527,7 +529,8 @@ class _ErrorView extends StatelessWidget {
                 style: const TextStyle(color: Colors.red),
                 textAlign: TextAlign.center),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: onRetry, child: const Text('Retry')),
+            ElevatedButton(
+                onPressed: onRetry, child: Text(AppLocalizations.of(context).adminRetry)),
           ],
         ),
       ),
@@ -540,16 +543,17 @@ class _EmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.leaderboard_outlined, size: 64, color: Colors.grey.shade400),
           const SizedBox(height: 16),
-          const Text('No custom leaderboards yet',
-              style: TextStyle(fontSize: 16, color: Colors.grey)),
+          Text(l10n.adminNoLeaderboards,
+              style: const TextStyle(fontSize: 16, color: Colors.grey)),
           const SizedBox(height: 4),
-          Text('Tap + to create your first one',
+          Text(l10n.adminTapToCreate,
               style: TextStyle(fontSize: 14, color: Colors.grey.shade500)),
         ],
       ),

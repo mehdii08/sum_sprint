@@ -37,6 +37,7 @@ class AuthProvider extends ChangeNotifier {
   User? get currentUser => _client.auth.currentUser;
   bool get isLoggedIn => currentUser != null;
   bool get isLoading => _isLoading;
+  /// Localization key (or raw server message); render with `AppLocalizations.tr`.
   String? get errorMessage => _errorMessage;
   String get userId => currentUser?.id ?? '';
   bool get isAdmin => _isAdmin;
@@ -91,7 +92,7 @@ class AuthProvider extends ChangeNotifier {
       );
 
       if (map == null || map.containsKey('error')) {
-        _errorMessage = map?['error'] as String? ?? 'Server did not respond.';
+        _errorMessage = map?['error'] as String? ?? 'errServerNoResponse';
         _isLoading = false;
         notifyListeners();
         return false;
@@ -176,7 +177,7 @@ class AuthProvider extends ChangeNotifier {
       return EmailSignUpResult.failure;
     } catch (e) {
       debugPrint('[Auth] signUp error: $e');
-      _errorMessage = 'Connection error. Please try again.';
+      _errorMessage = 'errConnectionRetry';
       _isLoading = false;
       notifyListeners();
       return EmailSignUpResult.failure;
@@ -218,7 +219,7 @@ class AuthProvider extends ChangeNotifier {
       }
 
       if (_client.auth.currentUser == null) {
-        _errorMessage = 'Invalid or expired code. Try again.';
+        _errorMessage = 'errInvalidCodeRetry';
         _isLoading = false;
         notifyListeners();
         return false;
@@ -242,7 +243,7 @@ class AuthProvider extends ChangeNotifier {
       return false;
     } catch (e) {
       debugPrint('[Auth] verifySignupCode error: $e');
-      _errorMessage = 'Could not verify code. Please try again.';
+      _errorMessage = 'errVerifyCodeFailed';
       _isLoading = false;
       notifyListeners();
       return false;
@@ -252,8 +253,7 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> _confirmViaDevOtp(String email) async {
     final password = _pendingSignupPassword;
     if (password == null || password.isEmpty) {
-      _errorMessage =
-          'Dev OTP needs the password from this sign-up. Start sign-up again.';
+      _errorMessage = 'errDevOtpNeedsPassword';
       return false;
     }
 
@@ -278,8 +278,7 @@ class AuthProvider extends ChangeNotifier {
       );
       confirmed = map != null && map['ok'] == true;
       if (!confirmed) {
-        _errorMessage = map?['error'] as String? ??
-            'Dev confirm failed. Apply migration 009_dev_confirm_signup.';
+        _errorMessage = map?['error'] as String? ?? 'errDevConfirmFailed';
         return false;
       }
     }
@@ -309,7 +308,7 @@ class AuthProvider extends ChangeNotifier {
       return false;
     } catch (e) {
       debugPrint('[Auth] resendSignupCode error: $e');
-      _errorMessage = 'Could not resend code. Please wait and try again.';
+      _errorMessage = 'errResendFailed';
       _isLoading = false;
       notifyListeners();
       return false;
@@ -339,7 +338,7 @@ class AuthProvider extends ChangeNotifier {
       );
 
       if (_client.auth.currentUser == null) {
-        _errorMessage = 'Sign in failed. Check your credentials.';
+        _errorMessage = 'errSignInFailed';
         _isLoading = false;
         notifyListeners();
         return false;
@@ -355,7 +354,7 @@ class AuthProvider extends ChangeNotifier {
       return false;
     } catch (e) {
       debugPrint('[Auth] signIn error: $e');
-      _errorMessage = 'Connection error. Please try again.';
+      _errorMessage = 'errConnectionRetry';
       _isLoading = false;
       notifyListeners();
       return false;
@@ -431,21 +430,21 @@ class AuthProvider extends ChangeNotifier {
   static String _friendly(String raw) {
     final l = raw.toLowerCase();
     if (l.contains('invalid login') || l.contains('invalid email')) {
-      return 'Invalid email or password.';
+      return 'errInvalidCredentials';
     }
     if (l.contains('already registered') || l.contains('already exists')) {
-      return 'An account with this email already exists.';
+      return 'errEmailExists';
     }
     if (l.contains('token') || l.contains('otp') || l.contains('expired')) {
-      return 'Invalid or expired code. Request a new one.';
+      return 'errInvalidCodeRequestNew';
     }
     if (l.contains('rate') || l.contains('too many')) {
-      return 'Too many attempts. Please wait a moment.';
+      return 'errTooManyAttempts';
     }
     if (l.contains('network') ||
         l.contains('connection') ||
         l.contains('timeout')) {
-      return 'Connection error. Check your internet.';
+      return 'errNoInternet';
     }
     return raw;
   }

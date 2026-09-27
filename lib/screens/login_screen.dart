@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../config/supabase_config.dart';
+import '../l10n/app_localizations.dart';
 import '../providers/auth_provider.dart';
 import '../providers/player_provider.dart';
 import '../providers/tg_home_provider.dart';
@@ -95,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen>
     final code = _codeCtrl.text.trim();
     if (code.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter the code from your email')),
+        SnackBar(content: Text(AppLocalizations.of(context).loginEnterCode)),
       );
       return;
     }
@@ -114,11 +115,12 @@ class _LoginScreenState extends State<LoginScreen>
     final auth = context.read<AuthProvider>();
     final ok = await auth.resendSignupCode(_pendingEmail ?? _emailCtrl.text);
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(ok
-            ? 'Code resent. Check your inbox.'
-            : (auth.errorMessage ?? 'Could not resend')),
+            ? l10n.loginCodeResent
+            : l10n.tr(auth.errorMessage ?? 'errResendFailed')),
       ),
     );
   }
@@ -275,6 +277,7 @@ class _LoginScreenState extends State<LoginScreen>
       return _buildCodeScreen();
     }
 
+    final l10n = AppLocalizations.of(context);
     final canPop = Navigator.canPop(context);
 
     return Scaffold(
@@ -335,11 +338,11 @@ class _LoginScreenState extends State<LoginScreen>
                           )
                         else
                           const SizedBox(width: 12),
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            'SUM SPRINT',
+                            l10n.appTitle.toUpperCase(),
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: kTextPrimary,
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
@@ -382,9 +385,9 @@ class _LoginScreenState extends State<LoginScreen>
                           fontSize: 13,
                         ),
                         dividerColor: Colors.transparent,
-                        tabs: const [
-                          Tab(text: 'Sign In'),
-                          Tab(text: 'Sign Up'),
+                        tabs: [
+                          Tab(text: l10n.loginSignIn),
+                          Tab(text: l10n.loginSignUp),
                         ],
                       ),
                     ),
@@ -408,6 +411,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildCodeScreen() {
+    final l10n = AppLocalizations.of(context);
     final auth = context.watch<AuthProvider>();
     final email = _pendingEmail ?? '';
 
@@ -456,11 +460,11 @@ class _LoginScreenState extends State<LoginScreen>
                                 color: kTextPrimary, size: 20),
                           ),
                         ),
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            'VERIFY EMAIL',
+                            l10n.loginVerifyEmail.toUpperCase(),
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: kTextPrimary,
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
@@ -502,10 +506,10 @@ class _LoginScreenState extends State<LoginScreen>
                             ),
                           ),
                           const SizedBox(height: 24),
-                          const Text(
-                            'Check your email',
+                          Text(
+                            l10n.loginCheckEmail,
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                               color: kTextPrimary,
@@ -513,7 +517,7 @@ class _LoginScreenState extends State<LoginScreen>
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'We sent a verification code to\n$email',
+                            l10n.loginCodeSentTo(email),
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontSize: 14,
@@ -532,7 +536,7 @@ class _LoginScreenState extends State<LoginScreen>
                                     color: kAccentGold.withAlpha(50)),
                               ),
                               child: Text(
-                                'Dev: use ${SupabaseConfig.devOtpCode}',
+                                l10n.loginDevCode(SupabaseConfig.devOtpCode),
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
                                   fontSize: 13,
@@ -559,7 +563,7 @@ class _LoginScreenState extends State<LoginScreen>
                               LengthLimitingTextInputFormatter(8),
                             ],
                             decoration: _fieldDecoration(
-                              label: 'Verification code',
+                              label: l10n.loginCodeLabel,
                               icon: Icons.pin_outlined,
                               hint: '••••••',
                             ).copyWith(
@@ -571,20 +575,20 @@ class _LoginScreenState extends State<LoginScreen>
                           ),
                           if (auth.errorMessage != null) ...[
                             const SizedBox(height: 12),
-                            _errorBanner(auth.errorMessage!),
+                            _errorBanner(l10n.tr(auth.errorMessage!)),
                           ],
                           const SizedBox(height: 20),
                           _primaryButton(
-                            label: 'Verify & continue',
+                            label: l10n.loginVerifyContinue,
                             onPressed: auth.isLoading ? null : _verifyCode,
                             loading: auth.isLoading,
                           ),
                           const SizedBox(height: 12),
                           TextButton(
                             onPressed: auth.isLoading ? null : _resendCode,
-                            child: const Text(
-                              'Resend code',
-                              style: TextStyle(color: kAccentCyan),
+                            child: Text(
+                              l10n.loginResendCode,
+                              style: const TextStyle(color: kAccentCyan),
                             ),
                           ),
                         ],
@@ -601,6 +605,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _form({required bool isSignUp}) {
+    final l10n = AppLocalizations.of(context);
     final auth = context.watch<AuthProvider>();
 
     return SingleChildScrollView(
@@ -635,7 +640,7 @@ class _LoginScreenState extends State<LoginScreen>
             ),
             const SizedBox(height: 22),
             Text(
-              isSignUp ? 'Create Account' : 'Welcome Back',
+              isSignUp ? l10n.loginCreateAccount : l10n.loginWelcomeBack,
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -645,9 +650,7 @@ class _LoginScreenState extends State<LoginScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              isSignUp
-                  ? 'Sign up, then enter the code we email you.'
-                  : 'Sign in to continue where you left off.',
+              isSignUp ? l10n.loginSignUpSubtitle : l10n.loginSignInSubtitle,
               style: const TextStyle(fontSize: 14, color: kTextSecondary),
               textAlign: TextAlign.center,
             ),
@@ -677,15 +680,15 @@ class _LoginScreenState extends State<LoginScreen>
                     style: const TextStyle(color: kTextPrimary),
                     cursorColor: kAccentPurple,
                     decoration: _fieldDecoration(
-                      label: 'Email',
+                      label: l10n.loginEmail,
                       icon: Icons.email_outlined,
                     ),
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) {
-                        return 'Email is required';
+                        return l10n.loginEmailRequired;
                       }
                       if (!v.contains('@') || !v.contains('.')) {
-                        return 'Enter a valid email';
+                        return l10n.loginEmailInvalid;
                       }
                       return null;
                     },
@@ -697,7 +700,7 @@ class _LoginScreenState extends State<LoginScreen>
                     style: const TextStyle(color: kTextPrimary),
                     cursorColor: kAccentPurple,
                     decoration: _fieldDecoration(
-                      label: 'Password',
+                      label: l10n.loginPassword,
                       icon: Icons.lock_outlined,
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -712,10 +715,10 @@ class _LoginScreenState extends State<LoginScreen>
                     ),
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) {
-                        return 'Password is required';
+                        return l10n.loginPasswordRequired;
                       }
                       if (isSignUp && v.length < 6) {
-                        return 'At least 6 characters';
+                        return l10n.loginPasswordTooShort;
                       }
                       return null;
                     },
@@ -727,19 +730,19 @@ class _LoginScreenState extends State<LoginScreen>
                       style: const TextStyle(color: kTextPrimary),
                       cursorColor: kAccentPurple,
                       decoration: _fieldDecoration(
-                        label: 'Nickname (optional)',
+                        label: l10n.loginNicknameOptional,
                         icon: Icons.person_outline,
-                        hint: 'How others see you on leaderboards',
+                        hint: l10n.loginNicknameHint,
                       ),
                     ),
                   ],
                   if (auth.errorMessage != null) ...[
                     const SizedBox(height: 14),
-                    _errorBanner(auth.errorMessage!),
+                    _errorBanner(l10n.tr(auth.errorMessage!)),
                   ],
                   const SizedBox(height: 18),
                   _primaryButton(
-                    label: isSignUp ? 'Create Account' : 'Sign In',
+                    label: isSignUp ? l10n.loginCreateAccount : l10n.loginSignIn,
                     onPressed: auth.isLoading
                         ? null
                         : (isSignUp ? _signUp : _signIn),

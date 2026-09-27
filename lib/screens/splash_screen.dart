@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/app_version.dart';
+import '../l10n/app_localizations.dart';
 import '../platform/telegram_init.dart';
 import '../providers/auth_provider.dart';
 import '../providers/player_provider.dart';
@@ -177,9 +178,9 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                       ),
                       const SizedBox(height: 28),
-                      const Text(
-                        'Sum Sprint',
-                        style: TextStyle(
+                      Text(
+                        AppLocalizations.of(context).appTitle,
+                        style: const TextStyle(
                           fontSize: 40,
                           fontWeight: FontWeight.w800,
                           color: kTextPrimary,
@@ -187,9 +188,9 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                       ),
                       const SizedBox(height: 10),
-                      const Text(
-                        'Fast math, real competitions',
-                        style: TextStyle(
+                      Text(
+                        AppLocalizations.of(context).splashTagline,
+                        style: const TextStyle(
                           fontSize: 15,
                           color: kTextSecondary,
                           fontWeight: FontWeight.w500,
