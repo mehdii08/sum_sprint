@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/player_provider.dart';
+import '../providers/tg_home_provider.dart';
+import 'home_screen.dart';
 
 /// Email / password login and sign-up screen.
 ///
@@ -21,7 +23,8 @@ class _LoginScreenState extends State<LoginScreen>
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _nickCtrl = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
+  final _signInFormKey = GlobalKey<FormState>();
+  final _signUpFormKey = GlobalKey<FormState>();
   bool _obscurePass = true;
 
   @override
@@ -40,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Future<void> _signIn() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_signInFormKey.currentState!.validate()) return;
 
     final auth = context.read<AuthProvider>();
     final ok = await auth.signInWithEmail(
@@ -52,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Future<void> _signUp() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_signUpFormKey.currentState!.validate()) return;
 
     final auth = context.read<AuthProvider>();
     final ok = await auth.signUpWithEmail(
@@ -79,7 +82,17 @@ class _LoginScreenState extends State<LoginScreen>
       }
     });
 
-    Navigator.pop(context, true);
+    // After logout the login screen is root — go straight home.
+    // From splash, pop so splash can enter home.
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context, true);
+    } else {
+      context.read<TgHomeProvider>().loadProfile();
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
+    }
   }
 
   @override
@@ -125,7 +138,7 @@ class _LoginScreenState extends State<LoginScreen>
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Form(
-        key: _formKey,
+        key: isSignUp ? _signUpFormKey : _signInFormKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

@@ -29,6 +29,35 @@ class TgHomeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void updateCoins(int coins) {
+    if (_profile == null) {
+      _profile = {'coins': coins};
+    } else {
+      _profile = {..._profile!, 'coins': coins};
+    }
+    notifyListeners();
+  }
+
+  /// Pays challenge entry (0 = free). Returns remaining coins, or null on failure.
+  Future<int?> payChallengeEntry(String challengeId) async {
+    try {
+      final remaining = await _client.rpc(
+        'pay_challenge_entry',
+        params: {'p_challenge_id': challengeId},
+      );
+      final coinsLeft = (remaining as num?)?.toInt() ?? coins;
+      updateCoins(coinsLeft);
+      return coinsLeft;
+    } catch (e) {
+      _errorMessage = e.toString().contains('Insufficient coins')
+          ? 'Not enough coins'
+          : 'Could not start challenge';
+      debugPrint('[TgHome] payChallengeEntry error: $e');
+      notifyListeners();
+      return null;
+    }
+  }
+
   Future<void> loadProfile() async {
     final uid = _client.auth.currentUser?.id;
     if (uid == null) return;

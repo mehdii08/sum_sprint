@@ -243,6 +243,7 @@ class AdminChallengeField {
   int pointsPerPair = 100;
   int maxTimeBonus = 500;
   int penaltyPerMismatch = 25;
+  int entryCoins = 0;
 
   int qCount = 10;
 
@@ -282,6 +283,7 @@ class AdminChallengeField {
         pointsPerPair = ch.pointsPerPair,
         maxTimeBonus = ch.maxTimeBonus,
         penaltyPerMismatch = ch.penaltyPerMismatch,
+        entryCoins = ch.entryCoins,
         qCount = ch.questionCount;
 
   static String _generateId() {

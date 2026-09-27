@@ -6,8 +6,10 @@ import '../models/question.dart';
 import '../providers/player_provider.dart';
 import '../providers/result_provider.dart';
 import '../providers/tic_tac_toe_provider.dart';
+import '../services/challenge_entry.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
+import '../widgets/balance_bar_chips.dart';
 import 'result_screen.dart';
 
 const _tttCyan = Color(0xFF22D3EE);
@@ -24,11 +26,22 @@ class TicTacToeGameScreen extends StatefulWidget {
 
 class _TicTacToeGameScreenState extends State<TicTacToeGameScreen> {
   bool _navigated = false;
+  bool _paying = false;
 
   @override
   void initState() {
     super.initState();
     Timer.run(() => context.read<TicTacToeProvider>().startChallenge(widget.challenge));
+  }
+
+  Future<void> _onStart(TicTacToeProvider provider) async {
+    if (_paying) return;
+    setState(() => _paying = true);
+    final paid = await payChallengeEntry(context, widget.challenge);
+    if (!mounted) return;
+    setState(() => _paying = false);
+    if (!paid) return;
+    provider.startPlaying();
   }
 
   @override
@@ -61,21 +74,8 @@ class _TicTacToeGameScreenState extends State<TicTacToeGameScreen> {
               ),
               onPressed: () => _showExitConfirmation(l10n),
             ),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _tttCyan.withAlpha(20),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: _tttCyan.withAlpha(50)),
-                    boxShadow: [BoxShadow(color: _tttCyan.withAlpha(15), blurRadius: 8)],
-                  ),
-                  child: const Text('STRATEGY',
-                      style: TextStyle(color: _tttCyan, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.0)),
-                ),
-              ),
+            actions: const [
+              BalanceBarChips(),
             ],
           ),
           body: Consumer<TicTacToeProvider>(
@@ -104,13 +104,29 @@ class _TicTacToeGameScreenState extends State<TicTacToeGameScreen> {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton.icon(
-                      onPressed: () => provider.startPlaying(),
-                      icon: const Icon(Icons.play_arrow_rounded, size: 26),
-                      label: const Text('START GAME',
-                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: 1.2)),
+                      onPressed: _paying ? null : () => _onStart(provider),
+                      icon: _paying
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                            )
+                          : Icon(
+                              widget.challenge.isFree
+                                  ? Icons.play_arrow_rounded
+                                  : Icons.monetization_on_rounded,
+                              size: 26,
+                            ),
+                      label: Text(
+                        widget.challenge.isFree
+                            ? 'START GAME'
+                            : 'START · ${widget.challenge.entryCoins}',
+                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: 1.2),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _tttCyan,
                         foregroundColor: Colors.black,
+                        disabledBackgroundColor: _tttCyan.withAlpha(120),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                         elevation: 0,
                         shadowColor: _tttCyan,

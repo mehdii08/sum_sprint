@@ -5,9 +5,11 @@ import '../models/challenge_definition.dart';
 import '../providers/player_provider.dart';
 import '../providers/result_provider.dart';
 import '../providers/mind_timer_provider.dart';
+import '../services/challenge_entry.dart';
 import '../services/mind_timer_scoring.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
+import '../widgets/balance_bar_chips.dart';
 import 'result_screen.dart';
 
 const _mtEmerald = Color(0xFF00C853);
@@ -30,6 +32,8 @@ class _MindTimerGameScreenState extends State<MindTimerGameScreen> with TickerPr
   late AnimationController _ringController;
   late Animation<double> _ringAnimation;
   bool _navigated = false;
+  bool _entryPaid = false;
+  bool _paying = false;
 
   @override
   void initState() {
@@ -49,6 +53,20 @@ class _MindTimerGameScreenState extends State<MindTimerGameScreen> with TickerPr
     _ringController.repeat(reverse: true);
 
     Timer.run(() => context.read<MindTimerProvider>().startChallenge(widget.challenge));
+  }
+
+  Future<void> _onStartRound(MindTimerProvider provider) async {
+    // Charge once on the first round only.
+    if (!_entryPaid) {
+      if (_paying) return;
+      setState(() => _paying = true);
+      final paid = await payChallengeEntry(context, widget.challenge);
+      if (!mounted) return;
+      setState(() => _paying = false);
+      if (!paid) return;
+      _entryPaid = true;
+    }
+    provider.startCounting();
   }
 
   @override
@@ -91,21 +109,8 @@ class _MindTimerGameScreenState extends State<MindTimerGameScreen> with TickerPr
               ),
               onPressed: () => _showExitConfirmation(l10n),
             ),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _mtEmerald.withAlpha(25),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: _mtEmerald.withAlpha(50)),
-                    boxShadow: [BoxShadow(color: _mtEmerald.withAlpha(15), blurRadius: 8)],
-                  ),
-                  child: const Text('FOCUS',
-                      style: TextStyle(color: _mtEmeraldLight, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.0)),
-                ),
-              ),
+            actions: const [
+              BalanceBarChips(),
             ],
           ),
           body: Consumer<MindTimerProvider>(
@@ -246,7 +251,7 @@ class _MindTimerGameScreenState extends State<MindTimerGameScreen> with TickerPr
                   return Transform.scale(scale: _pulseAnimation.value, child: child);
                 },
                 child: GestureDetector(
-                  onTap: () => provider.startCounting(),
+                  onTap: _paying ? null : () => _onStartRound(provider),
                   child: Container(
                     width: 140,
                     height: 140,
@@ -258,12 +263,30 @@ class _MindTimerGameScreenState extends State<MindTimerGameScreen> with TickerPr
                         BoxShadow(color: _mtEmerald.withAlpha(30), blurRadius: 48),
                       ],
                     ),
-                    child: const Column(
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.play_arrow_rounded, color: kTextPrimary, size: 44),
-                        SizedBox(height: 2),
-                        Text('START', style: TextStyle(color: kTextPrimary, fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
+                        if (_paying)
+                          const SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: kTextPrimary),
+                          )
+                        else
+                          Icon(
+                            (!_entryPaid && !widget.challenge.isFree)
+                                ? Icons.monetization_on_rounded
+                                : Icons.play_arrow_rounded,
+                            color: kTextPrimary,
+                            size: 44,
+                          ),
+                        const SizedBox(height: 2),
+                        Text(
+                          (!_entryPaid && !widget.challenge.isFree)
+                              ? 'START · ${widget.challenge.entryCoins}'
+                              : 'START',
+                          style: const TextStyle(color: kTextPrimary, fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1.5),
+                        ),
                       ],
                     ),
                   ),

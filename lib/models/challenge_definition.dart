@@ -52,6 +52,9 @@ class ChallengeDefinition {
   final int maxTimeBonus;        // max bonus for finishing early (default 500)
   final int penaltyPerMismatch;  // penalty for each wrong attempt (default 25)
 
+  /// Coins required to start this challenge. 0 = free.
+  final int entryCoins;
+
   // ── Tic‑Tac‑Toe reuses existing fields ──────────────────────────
   // - [timeLimitSeconds] → time limit for each match (round)
   // - [maxPoints]        → max score per round (final = average of rounds)
@@ -78,12 +81,14 @@ class ChallengeDefinition {
     this.pointsPerPair = 100,
     this.maxTimeBonus = 500,
     this.penaltyPerMismatch = 25,
+    this.entryCoins = 0,
   });
 
   bool get isMindTimer => challengeType == ChallengeType.mindTimer;
   bool get isMath => challengeType == ChallengeType.math;
   bool get isPairHunt => challengeType == ChallengeType.pairHunt;
   bool get isTicTacToe => challengeType == ChallengeType.ticTacToe;
+  bool get isFree => entryCoins <= 0;
 
   /// Number of pairs in a Pair Hunt challenge (blocks / 2).
   int get pairCount => blockCount ~/ 2;
@@ -119,6 +124,9 @@ class ChallengeDefinition {
       pointsPerPair: json['pointsPerPair'] as int? ?? 100,
       maxTimeBonus: json['maxTimeBonus'] as int? ?? 500,
       penaltyPerMismatch: json['penaltyPerMismatch'] as int? ?? 25,
+      entryCoins: (json['entryCoins'] as int?) ??
+          (json['entry_coins'] as int?) ??
+          0,
     );
   }
 
@@ -141,6 +149,7 @@ class ChallengeDefinition {
       'pointsPerPair': pointsPerPair,
       'maxTimeBonus': maxTimeBonus,
       'penaltyPerMismatch': penaltyPerMismatch,
+      'entryCoins': entryCoins,
     };
   }
 

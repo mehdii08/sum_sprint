@@ -5,8 +5,10 @@ import '../models/challenge_definition.dart';
 import '../providers/challenge_provider.dart';
 import '../providers/player_provider.dart';
 import '../providers/result_provider.dart';
+import '../services/challenge_entry.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
+import '../widgets/balance_bar_chips.dart';
 import 'result_screen.dart';
 
 class GameScreen extends StatefulWidget {
@@ -24,6 +26,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   late Animation<double> _scaleAnimation;
   late Animation<double> _shakeAnimation;
   bool _started = false;
+  bool _paying = false;
 
   @override
   void initState() {
@@ -46,7 +49,14 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     ]).animate(_wrongAnimController);
   }
 
-  void _onStart() {
+  Future<void> _onStart() async {
+    if (_paying) return;
+    setState(() => _paying = true);
+    final paid = await payChallengeEntry(context, widget.challenge);
+    if (!mounted) return;
+    setState(() => _paying = false);
+    if (!paid) return;
+
     setState(() => _started = true);
     final cp = context.read<ChallengeProvider>();
     cp.startChallenge(widget.challenge);
@@ -97,19 +107,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               onPressed: () => _showExitConfirmation(l10n),
             ),
             actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _difficultyColor.withAlpha(20),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: _difficultyColor.withAlpha(60)),
-                  ),
-                  child: Text(widget.challenge.isTicTacToe ? 'HARD' : 'MEDIUM',
-                      style: TextStyle(color: _difficultyColor, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.0)),
-                ),
-              ),
+              const BalanceBarChips(padding: EdgeInsets.only(right: 8)),
             ],
           ),
           body: Consumer<ChallengeProvider>(
@@ -128,8 +126,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       ),
     );
   }
-
-  Color get _difficultyColor => kAccentCyan;
 
   Widget _buildGameplay(ChallengeProvider provider, AppLocalizations l10n) {
     return SafeArea(
@@ -383,21 +379,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           title: Text(challenge.name,
               style: const TextStyle(color: kTextPrimary, fontWeight: FontWeight.bold)),
           centerTitle: true,
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _difficultyColor.withAlpha(20),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: _difficultyColor.withAlpha(60)),
-                  boxShadow: [BoxShadow(color: _difficultyColor.withAlpha(15), blurRadius: 8)],
-                ),
-                child: const Text('MEDIUM',
-                    style: TextStyle(color: kAccentCyan, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.0)),
-              ),
-            ),
+          actions: const [
+            BalanceBarChips(),
           ],
         ),
         body: SingleChildScrollView(
@@ -502,13 +485,29 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton.icon(
-                    onPressed: _onStart,
-                    icon: const Icon(Icons.play_arrow_rounded, size: 26),
-                    label: const Text('START GAME',
-                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: 1.2)),
+                    onPressed: _paying ? null : _onStart,
+                    icon: _paying
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: kTextPrimary),
+                          )
+                        : Icon(
+                            widget.challenge.isFree
+                                ? Icons.play_arrow_rounded
+                                : Icons.monetization_on_rounded,
+                            size: 26,
+                          ),
+                    label: Text(
+                      widget.challenge.isFree
+                          ? 'START GAME'
+                          : 'START · ${widget.challenge.entryCoins}',
+                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: 1.2),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: kAccentPurple,
                       foregroundColor: kTextPrimary,
+                      disabledBackgroundColor: kAccentPurple.withAlpha(120),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                       elevation: 0,
                       shadowColor: kAccentPurple,

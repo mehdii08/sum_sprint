@@ -219,7 +219,7 @@ class _AdminChallengesScreenState extends State<AdminChallengesScreen> {
                                   style: const TextStyle(
                                       fontWeight: FontWeight.w600)),
                               subtitle: Text(
-                                  '${_typeLabel(type)}  •  ${c.questionCount} rounds'),
+                                  '${_typeLabel(type)}  •  ${c.isFree ? 'Free' : '${c.entryCoins} coins'}'),
                               trailing: PopupMenuButton<String>(
                                 onSelected: (action) async {
                                   if (action == 'edit') {
@@ -363,6 +363,7 @@ class _ChallengeFormState extends State<_ChallengeForm> {
         'maxNumber': fc.max,
         'timePerQuestionSeconds': fc.time,
       },
+      'entryCoins': fc.entryCoins,
       'is_active': true,
     });
   }
@@ -532,6 +533,16 @@ class _ChallengeFormState extends State<_ChallengeForm> {
                 border: OutlineInputBorder(),
               ),
               maxLines: 2,
+            ),
+            const SizedBox(height: 12),
+            AdminNumericField(
+              label: 'Entry Coins (0 = free)',
+              icon: Icons.monetization_on_outlined,
+              value: fc.entryCoins,
+              step: 1,
+              min: 0,
+              max: 10000,
+              onChanged: (v) => setState(() => fc.entryCoins = v),
             ),
 
             const SizedBox(height: 24),

@@ -9,6 +9,7 @@ import '../providers/pair_hunt_provider.dart';
 import '../providers/tic_tac_toe_provider.dart';
 import '../providers/tg_home_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/balance_bar_chips.dart';
 import 'game_screen.dart';
 import 'mind_timer_game_screen.dart';
 import 'pair_hunt_game_screen.dart';
@@ -39,6 +40,9 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
     _enterCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
     _enterAnim = CurvedAnimation(parent: _enterCtrl, curve: Curves.easeOutCubic);
     _enterCtrl.forward();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<TgHomeProvider>().loadProfile();
+    });
   }
 
   @override
@@ -55,14 +59,24 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
         decoration: const BoxDecoration(gradient: kBgGradient),
         child: Scaffold(
           backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            automaticallyImplyLeading: false,
+            title: const Text('Results',
+                style: TextStyle(color: kTextPrimary, fontWeight: FontWeight.bold)),
+            actions: const [
+              BalanceBarChips(),
+            ],
+          ),
           body: SafeArea(
+            top: false,
             child: FadeTransition(
               opacity: _enterAnim,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
                 child: Column(
                   children: [
-                    const SizedBox(height: 20),
                     _TrophyHeader(result: widget.result, challenge: widget.challenge),
                     const SizedBox(height: 24),
                     const Text('CHALLENGE COMPLETE!',

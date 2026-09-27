@@ -4,6 +4,7 @@ import '../providers/auth_provider.dart';
 import '../providers/challenge_provider.dart';
 import '../providers/tg_home_provider.dart';
 import '../models/challenge_definition.dart';
+import '../widgets/balance_bar_chips.dart';
 import 'game_screen.dart';
 import 'mind_timer_game_screen.dart';
 import 'pair_hunt_game_screen.dart';
@@ -118,7 +119,6 @@ class _HomeTabState extends State<_HomeTab> with SingleTickerProviderStateMixin 
                       ? '@${auth.telegramUsername}'
                       : (auth.userEmail.isNotEmpty ? auth.userEmail : null),
                   photoUrl: auth.telegramPhotoUrl,
-                  score: tgHome.totalScore,
                   isAdmin: auth.isAdmin,
                   onProfileTap: () {
                     Navigator.push(context,
@@ -201,7 +201,6 @@ class _ProfileHeader extends StatelessWidget {
   final String name;
   final String? username;
   final String photoUrl;
-  final int score;
   final bool isAdmin;
   final VoidCallback? onProfileTap;
   final VoidCallback? onAdminTap;
@@ -210,7 +209,6 @@ class _ProfileHeader extends StatelessWidget {
     required this.name,
     this.username,
     required this.photoUrl,
-    required this.score,
     required this.isAdmin,
     this.onProfileTap,
     this.onAdminTap,
@@ -261,25 +259,9 @@ class _ProfileHeader extends StatelessWidget {
               ),
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: _accentGold.withAlpha(15),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: _accentGold.withAlpha(60)),
-              boxShadow: [BoxShadow(color: _accentGold.withAlpha(20), blurRadius: 8)],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.star_rounded, color: _accentGold, size: 18),
-                const SizedBox(width: 6),
-                Text('$score', style: const TextStyle(color: _accentGold, fontSize: 16, fontWeight: FontWeight.bold)),
-              ],
-            ),
-          ),
+          const BalanceBarChips(padding: EdgeInsets.zero),
           if (isAdmin) ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: 4),
             IconButton(
               icon: const Icon(Icons.admin_panel_settings_rounded, color: _accentCyan, size: 22),
               onPressed: onAdminTap,
@@ -373,6 +355,9 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> with Singl
 
   @override
   Widget build(BuildContext context) {
+    final isFree = widget.challenge.isFree;
+    final entryLabel = isFree ? 'FREE' : '${widget.challenge.entryCoins}';
+
     return AnimatedBuilder(
       animation: _slideAnim,
       builder: (context, child) => Transform.scale(scale: _scaleAnim.value, child: child),
@@ -446,7 +431,14 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> with Singl
                                         width: 3, height: 3,
                                         decoration: const BoxDecoration(color: _textMuted, shape: BoxShape.circle),
                                       ),
-                                      const Text('Solo', style: TextStyle(color: _textSecondary, fontSize: 12)),
+                                      Text(
+                                        isFree ? 'Free' : '$entryLabel coins',
+                                        style: TextStyle(
+                                          color: isFree ? const Color(0xFF34D399) : _accentGold,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
                                       Container(
                                         margin: const EdgeInsets.symmetric(horizontal: 8),
                                         width: 3, height: 3,
@@ -467,26 +459,21 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> with Singl
                                 ],
                               ),
                             ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: _difficultyColor.withAlpha(20),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: _difficultyColor.withAlpha(60)),
-                                  ),
-                                  child: Text(
-                                    widget.challenge.isTicTacToe
-                                        ? 'Hard'
-                                        : widget.challenge.isPairHunt
-                                            ? 'Medium'
-                                            : 'Easy',
-                                    style: TextStyle(color: _difficultyColor, fontSize: 11, fontWeight: FontWeight.w700),
-                                  ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: (isFree ? const Color(0xFF34D399) : _accentGold).withAlpha(20),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: (isFree ? const Color(0xFF34D399) : _accentGold).withAlpha(60)),
+                              ),
+                              child: Text(
+                                isFree ? 'Free' : entryLabel,
+                                style: TextStyle(
+                                  color: isFree ? const Color(0xFF34D399) : _accentGold,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
                                 ),
-                              ],
+                              ),
                             ),
                           ],
                         ),
@@ -507,8 +494,14 @@ class _PremiumChallengeCardState extends State<_PremiumChallengeCard> with Singl
                               height: 34,
                               child: ElevatedButton.icon(
                                 onPressed: _navigateToGame,
-                                icon: const Icon(Icons.play_arrow_rounded, size: 18),
-                                label: const Text('PLAY', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.0)),
+                                icon: Icon(
+                                  isFree ? Icons.play_arrow_rounded : Icons.monetization_on_rounded,
+                                  size: 18,
+                                ),
+                                label: Text(
+                                  isFree ? 'PLAY' : 'PLAY · $entryLabel',
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.0),
+                                ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: _accent,
                                   foregroundColor: Colors.white,

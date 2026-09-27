@@ -9,6 +9,7 @@ import '../config/app_version.dart';
 import '../theme/app_theme.dart';
 import 'admin/admin_dashboard_screen.dart';
 import '../utils/clear_app_cache.dart';
+import 'login_screen.dart';
 
 /// Profile screen — account info, nickname editing, and coins balance.
 class ProfileScreen extends StatefulWidget {
@@ -59,6 +60,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
               foregroundColor: kTextPrimary,
             ),
             child: const Text('Clear & Reload'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmLogout(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: kSurfaceDark,
+        title: const Text('Log out?', style: TextStyle(color: kTextPrimary)),
+        content: const Text(
+          'You will need to sign in again with your email to play.',
+          style: TextStyle(color: kTextSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: kTextMuted)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final auth = context.read<AuthProvider>();
+              final player = context.read<PlayerProvider>();
+              await auth.signOut();
+              player.clearUid();
+              if (!context.mounted) return;
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (_) => false,
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Log out'),
           ),
         ],
       ),
@@ -329,6 +370,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             subtitle: 'Manage challenges and leaderboards',
                             trailing: const Icon(Icons.chevron_right_rounded,
                                 color: kTextMuted),
+                          ),
+                        ),
+                      ),
+                    ],
+
+                    if (!auth.isTelegramUser) ...[
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: OutlinedButton.icon(
+                          onPressed: () => _confirmLogout(context),
+                          icon: const Icon(Icons.logout_rounded, size: 20),
+                          label: const Text(
+                            'Log out',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.redAccent,
+                            side: BorderSide(
+                                color: Colors.redAccent.withAlpha(80)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
                         ),
                       ),

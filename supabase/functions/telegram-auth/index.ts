@@ -3,25 +3,12 @@
  *
  * Verifies Telegram Mini App initData and returns Supabase credentials.
  *
- * Flow:
- * 1. Receives initData from Telegram.WebApp (query string with hash)
- * 2. Verifies HMAC-SHA256 hash using the bot token
- * 3. Finds or creates a Supabase user (linked by telegram_id)
- * 4. Returns { email, password } for the Flutter app to sign in
- *
- * Environment variables (set via `supabase secrets set`):
- *   TELEGRAM_BOT_TOKEN  – your bot token from @BotFather
- *   PASSWORD_SALT       – (optional) salt for deriving user passwords
- *
  * Deploy: supabase functions deploy telegram-auth --no-verify-jwt
  */
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 
-// ---------------------------------------------------------------------------
-// CORS
-// ---------------------------------------------------------------------------
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -29,11 +16,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/** Derive a deterministic password from a Telegram user ID. */
 async function derivePassword(telegramId: number): Promise<string> {
   const salt = Deno.env.get("PASSWORD_SALT") ?? "sumsprint-telegram-2024";
   const encoder = new TextEncoder();
@@ -43,9 +25,6 @@ async function derivePassword(telegramId: number): Promise<string> {
   return btoa(String.fromCharCode(...bytes)).substring(0, 24);
 }
 
-/**
- * Verify Telegram initData HMAC-SHA256 signature.
- */
 async function verifyTelegramHash(
   initData: string,
   botToken: string,
@@ -55,33 +34,41 @@ async function verifyTelegramHash(
   if (!receivedHash) return null;
   params.delete("hash");
 
-  // Build data-check-string: keys sorted alphabetically, joined by \n
-  const entries = Array.from(params.entries());
-  entries.sort(([a], [b]) => a.localeCompare(b));
-  const dataCheckString = entries.map(([k, v]) => `${k}=${v}`).join("\n");
+  const dataCheckString = [...params.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, value]) => `${key}=${value}`)
+    .join("\n");
 
-  // Secret key = SHA-256 of bot token
   const encoder = new TextEncoder();
-  const secretKeyBuffer = await crypto.subtle.digest(
-    "SHA-256",
-    encoder.encode(botToken),
-  );
 
-  // Import as HMAC key
-  const key = await crypto.subtle.importKey(
+  const webAppDataKey = await crypto.subtle.importKey(
     "raw",
-    secretKeyBuffer,
+    encoder.encode("WebAppData"),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"],
   );
 
-  // Compute HMAC
+  const secretKey = await crypto.subtle.sign(
+    "HMAC",
+    webAppDataKey,
+    encoder.encode(botToken),
+  );
+
+  const secretKeyImport = await crypto.subtle.importKey(
+    "raw",
+    secretKey,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+
   const signature = await crypto.subtle.sign(
     "HMAC",
-    key,
+    secretKeyImport,
     encoder.encode(dataCheckString),
   );
+
   const computedHash = Array.from(new Uint8Array(signature))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
@@ -89,11 +76,7 @@ async function verifyTelegramHash(
   return computedHash === receivedHash ? params : null;
 }
 
-// ---------------------------------------------------------------------------
-// Main handler
-// ---------------------------------------------------------------------------
 serve(async (req: Request) => {
-  // CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -108,7 +91,6 @@ serve(async (req: Request) => {
       );
     }
 
-    // 1. Verify hash
     const botToken = Deno.env.get("TELEGRAM_BOT_TOKEN");
     if (!botToken) {
       return new Response(
@@ -125,7 +107,6 @@ serve(async (req: Request) => {
       );
     }
 
-    // 2. Extract user info
     const userStr = params.get("user");
     if (!userStr) {
       return new Response(
@@ -141,17 +122,14 @@ serve(async (req: Request) => {
     const username: string = user.username ?? "";
     const displayName: string = firstName || username || `Player`;
 
-    // 3. Derive credentials
     const password = await derivePassword(telegramId);
     const email = `tg_${telegramId}@sumsprint.internal`;
 
-    // 4. Create or update Supabase user
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Try to sign in (existing user) — if it works we're done
     const { data: signInData } = await supabaseAdmin.auth.signInWithPassword({
       email,
       password,
@@ -162,7 +140,6 @@ serve(async (req: Request) => {
     if (signInData?.user) {
       userId = signInData.user.id;
     } else {
-      // Create new user
       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin
         .createUser({
           email,
@@ -187,7 +164,6 @@ serve(async (req: Request) => {
 
       userId = newUser.user.id;
 
-      // Ensure profiles row has telegram_id and username (trigger might not set them)
       const { error: upsertError } = await supabaseAdmin
         .from("profiles")
         .upsert({
@@ -195,7 +171,7 @@ serve(async (req: Request) => {
           nickname: displayName,
           telegram_id: telegramId,
           telegram_username: username || null,
-          points: 500,
+          coins: 500,
         }, { onConflict: "id" });
 
       if (upsertError) {
@@ -203,7 +179,6 @@ serve(async (req: Request) => {
       }
     }
 
-    // 5. Update profile telegram_id and username on every login
     const { error: updateError } = await supabaseAdmin
       .from("profiles")
       .update({
@@ -216,7 +191,6 @@ serve(async (req: Request) => {
       console.error("Failed to update profile telegram_id:", updateError);
     }
 
-    // 6. Return credentials to Flutter app
     return new Response(
       JSON.stringify({
         email,
