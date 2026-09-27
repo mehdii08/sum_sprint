@@ -16,4 +16,10 @@ class SupabaseConfig {
   /// Set to `true` to allow email-authed (non-Telegram) users to access
   /// the admin panel. Only works in debug builds (`flutter run`).
   static const bool debugMode = true;
+
+  /// Dev-only fixed signup OTP. Must match edge function `dev-confirm-signup`.
+  static const String devOtpCode = '123456';
+
+  /// Shared secret for the dev OTP edge function (not for production).
+  static const String devOtpSecret = 'sum-sprint-dev-otp';
 }

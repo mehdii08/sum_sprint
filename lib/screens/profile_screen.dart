@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/player_provider.dart';
 import '../providers/tg_home_provider.dart';
-import '../config/supabase_config.dart';
 import '../config/app_version.dart';
 import '../theme/app_theme.dart';
 import 'admin/admin_dashboard_screen.dart';
@@ -342,12 +341,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ],
 
-                    if (auth.isAdmin ||
-                        SupabaseConfig.adminUsernames
-                            .contains(auth.telegramUsername) ||
-                        (kDebugMode &&
-                            SupabaseConfig.debugMode &&
-                            auth.isLoggedIn)) ...[
+                    if (auth.isAdmin) ...[
                       const SizedBox(height: 14),
                       _sectionCard(
                         title: 'Admin',

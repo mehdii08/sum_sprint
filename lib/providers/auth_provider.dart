@@ -3,7 +3,19 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../platform/telegram_init.dart';
 import '../config/supabase_config.dart';
 
-/// Manages authentication via Telegram Mini App.
+/// Result of starting an email sign-up.
+enum EmailSignUpResult {
+  /// Session ready — can enter the app.
+  success,
+
+  /// Account created; user must enter the email verification code.
+  needsVerification,
+
+  /// Sign-up failed (see [AuthProvider.errorMessage]).
+  failure,
+}
+
+/// Manages authentication via Telegram Mini App / email.
 class AuthProvider extends ChangeNotifier {
   final SupabaseClient _client;
 
@@ -11,6 +23,9 @@ class AuthProvider extends ChangeNotifier {
   String? _errorMessage;
   bool _isAdmin = false;
   Map<String, dynamic>? _cachedProfile;
+  String? _pendingSignupEmail;
+  String? _pendingSignupNickname;
+  String? _pendingSignupPassword;
 
   AuthProvider({SupabaseClient? client})
       : _client = client ?? Supabase.instance.client {
@@ -25,6 +40,7 @@ class AuthProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   String get userId => currentUser?.id ?? '';
   bool get isAdmin => _isAdmin;
+  String? get pendingSignupEmail => _pendingSignupEmail;
 
   String get telegramFirstName => isTelegramUser ? tgFirstName : '';
   String get telegramLastName => isTelegramUser ? tgLastName : '';
@@ -76,19 +92,25 @@ class AuthProvider extends ChangeNotifier {
 
       if (map == null || map.containsKey('error')) {
         _errorMessage = map?['error'] as String? ?? 'Server did not respond.';
-        _isLoading = false; notifyListeners(); return false;
+        _isLoading = false;
+        notifyListeners();
+        return false;
       }
 
       final email = map['email'] as String?;
       final password = map['password'] as String?;
       if (email == null || password == null) {
-        _isLoading = false; notifyListeners(); return false;
+        _isLoading = false;
+        notifyListeners();
+        return false;
       }
 
       await _client.auth.signInWithPassword(email: email, password: password);
 
       if (_client.auth.currentUser == null) {
-        _isLoading = false; notifyListeners(); return false;
+        _isLoading = false;
+        notifyListeners();
+        return false;
       }
 
       _isLoading = false;
@@ -96,69 +118,209 @@ class AuthProvider extends ChangeNotifier {
       return true;
     } on AuthException catch (e) {
       debugPrint('[Auth] AuthException: ${e.message}');
-      _isLoading = false; notifyListeners(); return false;
+      _isLoading = false;
+      notifyListeners();
+      return false;
     } catch (e) {
       debugPrint('[Auth] $e');
-      _isLoading = false; notifyListeners(); return false;
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
   }
 
   // ── Email / password auth (non-Telegram) ──────────────────────
 
-  /// Sign up a new user with email + password. Also creates a profiles row.
-  /// Returns true if sign-up + sign-in succeeded, false otherwise.
-  Future<bool> signUpWithEmail({
+  /// Sign up with email + password.
+  ///
+  /// When email confirmation is required, returns
+  /// [EmailSignUpResult.needsVerification] so the UI can collect the code.
+  Future<EmailSignUpResult> signUpWithEmail({
     required String email,
     required String password,
     required String nickname,
   }) async {
     _isLoading = true;
     _errorMessage = null;
+    _pendingSignupEmail = null;
+    _pendingSignupNickname = null;
+    _pendingSignupPassword = null;
     notifyListeners();
 
+    final trimmed = email.trim();
+
     try {
-      // Step 1 — create the user
       await _client.auth.signUp(
-        email: email.trim(),
+        email: trimmed,
         password: password,
         data: {'nickname': nickname},
       );
 
-      // If email confirmation is ON, signUp won't auto-sign-in.
-      // Try sign-in explicitly.
       if (_client.auth.currentUser == null) {
-        try {
-          await _client.auth.signInWithPassword(
-            email: email.trim(),
-            password: password,
-          );
-        } catch (_) {
-          // sign-up created the user but sign-in failed (likely email
-          // confirmation required). Show a helpful message.
-          _errorMessage = _emailConfirmMessage;
-          _isLoading = false; notifyListeners(); return false;
-        }
+        _pendingSignupEmail = trimmed;
+        _pendingSignupNickname = nickname;
+        _pendingSignupPassword = password;
+        _isLoading = false;
+        notifyListeners();
+        return EmailSignUpResult.needsVerification;
       }
 
-      if (_client.auth.currentUser == null) {
-        _errorMessage = _emailConfirmMessage;
-        _isLoading = false; notifyListeners(); return false;
-      }
-
-      // Ensure profiles row exists
       await _ensureProfile(nickname);
+      _isLoading = false;
+      notifyListeners();
+      return EmailSignUpResult.success;
+    } on AuthException catch (e) {
+      _errorMessage = _friendly(e.message);
+      _isLoading = false;
+      notifyListeners();
+      return EmailSignUpResult.failure;
+    } catch (e) {
+      debugPrint('[Auth] signUp error: $e');
+      _errorMessage = 'Connection error. Please try again.';
+      _isLoading = false;
+      notifyListeners();
+      return EmailSignUpResult.failure;
+    }
+  }
+
+  /// Confirms signup with the code emailed to the user.
+  ///
+  /// In debug builds, code [SupabaseConfig.devOtpCode] bypasses email via
+  /// the `dev-confirm-signup` edge function, then signs in with the pending
+  /// password from sign-up.
+  Future<bool> verifySignupCode({
+    required String email,
+    required String code,
+    String? nickname,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final trimmedEmail = email.trim();
+    final trimmedCode = code.trim();
+
+    try {
+      if (SupabaseConfig.debugMode &&
+          trimmedCode == SupabaseConfig.devOtpCode) {
+        final ok = await _confirmViaDevOtp(trimmedEmail);
+        if (!ok) {
+          _isLoading = false;
+          notifyListeners();
+          return false;
+        }
+      } else {
+        await _client.auth.verifyOTP(
+          email: trimmedEmail,
+          token: trimmedCode,
+          type: OtpType.signup,
+        );
+      }
+
+      if (_client.auth.currentUser == null) {
+        _errorMessage = 'Invalid or expired code. Try again.';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      final nick = nickname ??
+          _pendingSignupNickname ??
+          trimmedEmail.split('@').first;
+      await _ensureProfile(nick);
+      _pendingSignupEmail = null;
+      _pendingSignupNickname = null;
+      _pendingSignupPassword = null;
 
       _isLoading = false;
       notifyListeners();
       return true;
     } on AuthException catch (e) {
       _errorMessage = _friendly(e.message);
-      _isLoading = false; notifyListeners(); return false;
+      _isLoading = false;
+      notifyListeners();
+      return false;
     } catch (e) {
-      debugPrint('[Auth] signUp error: $e');
-      _errorMessage = 'Connection error. Please try again.';
-      _isLoading = false; notifyListeners(); return false;
+      debugPrint('[Auth] verifySignupCode error: $e');
+      _errorMessage = 'Could not verify code. Please try again.';
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
+  }
+
+  Future<bool> _confirmViaDevOtp(String email) async {
+    final password = _pendingSignupPassword;
+    if (password == null || password.isEmpty) {
+      _errorMessage =
+          'Dev OTP needs the password from this sign-up. Start sign-up again.';
+      return false;
+    }
+
+    var confirmed = false;
+    try {
+      final ok = await _client.rpc('dev_confirm_signup', params: {
+        'p_email': email,
+        'p_code': SupabaseConfig.devOtpCode,
+        'p_secret': SupabaseConfig.devOtpSecret,
+      });
+      confirmed = ok == true;
+    } catch (e) {
+      debugPrint('[Auth] dev_confirm_signup RPC: $e');
+    }
+
+    if (!confirmed) {
+      final map = await postToEdgeFunction(
+        url: '${SupabaseConfig.url}/functions/v1/dev-confirm-signup',
+        anonKey: SupabaseConfig.anonKey,
+        body: {'email': email, 'code': SupabaseConfig.devOtpCode},
+        extraHeaders: {'x-dev-otp-secret': SupabaseConfig.devOtpSecret},
+      );
+      confirmed = map != null && map['ok'] == true;
+      if (!confirmed) {
+        _errorMessage = map?['error'] as String? ??
+            'Dev confirm failed. Apply migration 009_dev_confirm_signup.';
+        return false;
+      }
+    }
+
+    await _client.auth.signInWithPassword(email: email, password: password);
+    return _client.auth.currentUser != null;
+  }
+
+  /// Resends the signup confirmation email / code.
+  Future<bool> resendSignupCode(String email) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _client.auth.resend(
+        type: OtpType.signup,
+        email: email.trim(),
+      );
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } on AuthException catch (e) {
+      _errorMessage = _friendly(e.message);
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      debugPrint('[Auth] resendSignupCode error: $e');
+      _errorMessage = 'Could not resend code. Please wait and try again.';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  void clearPendingSignup() {
+    _pendingSignupEmail = null;
+    _pendingSignupNickname = null;
+    _pendingSignupPassword = null;
+    notifyListeners();
   }
 
   /// Sign in with email + password.
@@ -178,7 +340,9 @@ class AuthProvider extends ChangeNotifier {
 
       if (_client.auth.currentUser == null) {
         _errorMessage = 'Sign in failed. Check your credentials.';
-        _isLoading = false; notifyListeners(); return false;
+        _isLoading = false;
+        notifyListeners();
+        return false;
       }
 
       _isLoading = false;
@@ -186,11 +350,15 @@ class AuthProvider extends ChangeNotifier {
       return true;
     } on AuthException catch (e) {
       _errorMessage = _friendly(e.message);
-      _isLoading = false; notifyListeners(); return false;
+      _isLoading = false;
+      notifyListeners();
+      return false;
     } catch (e) {
       debugPrint('[Auth] signIn error: $e');
       _errorMessage = 'Connection error. Please try again.';
-      _isLoading = false; notifyListeners(); return false;
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
   }
 
@@ -200,6 +368,9 @@ class AuthProvider extends ChangeNotifier {
     await _client.auth.signOut();
     _isAdmin = false;
     _cachedProfile = null;
+    _pendingSignupEmail = null;
+    _pendingSignupNickname = null;
+    _pendingSignupPassword = null;
     notifyListeners();
   }
 
@@ -207,7 +378,8 @@ class AuthProvider extends ChangeNotifier {
     try {
       final uid = currentUser?.id;
       if (uid == null) return null;
-      final r = await _client.from('profiles').select().eq('id', uid).maybeSingle();
+      final r =
+          await _client.from('profiles').select().eq('id', uid).maybeSingle();
       if (r != null) {
         final profile = Map<String, dynamic>.from(r as Map);
         _isAdmin = profile['is_admin'] == true;
@@ -225,7 +397,9 @@ class AuthProvider extends ChangeNotifier {
     try {
       final uid = currentUser?.id;
       if (uid == null) return;
-      await _client.from('profiles').update({'nickname': nickname}).eq('id', uid);
+      await _client
+          .from('profiles')
+          .update({'nickname': nickname}).eq('id', uid);
       if (_cachedProfile != null) {
         _cachedProfile = {..._cachedProfile!, 'nickname': nickname};
         notifyListeners();
@@ -247,7 +421,10 @@ class AuthProvider extends ChangeNotifier {
 
   String get userEmail => currentUser?.email ?? '';
 
-  void clearError() { _errorMessage = null; notifyListeners(); }
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
+  }
 
   // ── Helpers ──────────────────────────────────────────────────────
 
@@ -259,18 +436,17 @@ class AuthProvider extends ChangeNotifier {
     if (l.contains('already registered') || l.contains('already exists')) {
       return 'An account with this email already exists.';
     }
+    if (l.contains('token') || l.contains('otp') || l.contains('expired')) {
+      return 'Invalid or expired code. Request a new one.';
+    }
     if (l.contains('rate') || l.contains('too many')) {
       return 'Too many attempts. Please wait a moment.';
     }
-    if (l.contains('network') || l.contains('connection') || l.contains('timeout')) {
+    if (l.contains('network') ||
+        l.contains('connection') ||
+        l.contains('timeout')) {
       return 'Connection error. Check your internet.';
     }
     return raw;
   }
-
-  static const _emailConfirmMessage =
-      'Account created! If email confirmation is enabled in Supabase, '
-      'check your inbox for a confirmation link, then sign in. '
-      'Tip: disable email confirmation in Supabase → Authentication → Settings '
-      'for easier local testing.';
 }

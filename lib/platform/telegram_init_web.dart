@@ -43,6 +43,7 @@ Future<Map<String, dynamic>?> postToEdgeFunction({
   required String url,
   required String anonKey,
   required Map<String, dynamic> body,
+  Map<String, String>? extraHeaders,
 }) {
   final c = Completer<Map<String, dynamic>?>();
   final xhr = html.HttpRequest();
@@ -51,6 +52,7 @@ Future<Map<String, dynamic>?> postToEdgeFunction({
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.setRequestHeader('apikey', anonKey);
   xhr.setRequestHeader('Authorization', 'Bearer $anonKey');
+  extraHeaders?.forEach(xhr.setRequestHeader);
 
   xhr.onReadyStateChange.listen((_) {
     if (xhr.readyState == html.HttpRequest.DONE) {
