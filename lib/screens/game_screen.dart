@@ -11,9 +11,8 @@ import 'result_screen.dart';
 
 class GameScreen extends StatefulWidget {
   final ChallengeDefinition challenge;
-  final String? competitionId;
 
-  const GameScreen({super.key, required this.challenge, this.competitionId});
+  const GameScreen({super.key, required this.challenge});
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -358,7 +357,12 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
   Widget _buildInstructionView(AppLocalizations l10n) {
     final challenge = widget.challenge;
-    return Container(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _showExitConfirmation(l10n);
+      },
+      child: Container(
       decoration: const BoxDecoration(gradient: kBgGradient),
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -372,9 +376,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 color: kTextPrimary.withAlpha(10),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.arrow_back_rounded, color: kTextPrimary, size: 20),
+              child: const Icon(Icons.close_rounded, color: kTextPrimary, size: 20),
             ),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => _showExitConfirmation(l10n),
           ),
           title: Text(challenge.name,
               style: const TextStyle(color: kTextPrimary, fontWeight: FontWeight.bold)),
@@ -484,32 +488,42 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   _InfoPill(icon: Icons.star_rounded, text: '${challenge.maxPoints} Max Pts'),
                 ],
               ),
-              const SizedBox(height: 40),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton.icon(
-                  onPressed: _onStart,
-                  icon: const Icon(Icons.play_arrow_rounded, size: 26),
-                  label: const Text('START GAME',
-                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: 1.2)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kAccentPurple,
-                    foregroundColor: kTextPrimary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                    elevation: 0,
-                    shadowColor: kAccentPurple,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              const Text('PERSONAL BEST: -- PTS',
-                  style: TextStyle(color: kTextMuted, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.8)),
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
             ],
           ),
         ),
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton.icon(
+                    onPressed: _onStart,
+                    icon: const Icon(Icons.play_arrow_rounded, size: 26),
+                    label: const Text('START GAME',
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: 1.2)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kAccentPurple,
+                      foregroundColor: kTextPrimary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                      elevation: 0,
+                      shadowColor: kAccentPurple,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text('PERSONAL BEST: -- PTS',
+                    style: TextStyle(color: kTextMuted, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.8)),
+              ],
+            ),
+          ),
+        ),
       ),
+    ),
     );
   }
 
@@ -548,20 +562,12 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
     if (!mounted) return;
 
-    if (widget.competitionId != null) {
-      Navigator.pop(context, {
-        'result': result,
-        'challenge': widget.challenge,
-        'competitionId': widget.competitionId,
-      });
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ResultScreen(result: result, challenge: widget.challenge),
-        ),
-      );
-    }
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ResultScreen(result: result, challenge: widget.challenge),
+      ),
+    );
   }
 }
 

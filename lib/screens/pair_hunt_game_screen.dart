@@ -18,9 +18,8 @@ const _phCharcoal = Color(0xFF1E1E24);
 
 class PairHuntGameScreen extends StatefulWidget {
   final ChallengeDefinition challenge;
-  final String? competitionId;
 
-  const PairHuntGameScreen({super.key, required this.challenge, this.competitionId});
+  const PairHuntGameScreen({super.key, required this.challenge});
 
   @override
   State<PairHuntGameScreen> createState() => _PairHuntGameScreenState();
@@ -496,16 +495,10 @@ class _PairHuntGameScreenState extends State<PairHuntGameScreen> {
     context.read<ResultProvider>().saveResult(result);
     if (!mounted) return;
 
-    if (widget.competitionId != null) {
-      Navigator.pop(context, {
-        'result': result, 'challenge': widget.challenge, 'competitionId': widget.competitionId,
-      });
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => ResultScreen(result: result, challenge: widget.challenge)),
-      );
-    }
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => ResultScreen(result: result, challenge: widget.challenge)),
+    );
   }
 }
 

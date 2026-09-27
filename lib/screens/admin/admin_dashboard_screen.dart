@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'admin_competitions_screen.dart';
 import 'admin_leaderboards_screen.dart';
 import 'admin_challenges_screen.dart';
 import '../../providers/auth_provider.dart';
@@ -57,16 +56,6 @@ class AdminDashboardScreen extends StatelessWidget {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const AdminChallengesScreen()),
-            ),
-          ),
-          _Card(
-            icon: Icons.emoji_events,
-            title: l10n.adminCompetitions,
-            subtitle: l10n.adminCompetitionsSubtitle,
-            color: Colors.amber,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AdminCompetitionsScreen()),
             ),
           ),
           _Card(

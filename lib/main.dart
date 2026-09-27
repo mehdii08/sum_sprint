@@ -2,25 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/supabase_config.dart';
-import 'platform/telegram_init.dart';
 import 'providers/player_provider.dart';
 import 'providers/challenge_provider.dart';
 import 'providers/result_provider.dart';
 import 'providers/auth_provider.dart';
-import 'providers/competition_provider.dart';
 import 'providers/mind_timer_provider.dart';
 import 'providers/pair_hunt_provider.dart';
 import 'providers/tic_tac_toe_provider.dart';
 import 'providers/tg_home_provider.dart';
 import 'screens/splash_screen.dart';
-import 'screens/tg_splash_screen.dart';
 import 'l10n/app_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Supabase for Telegram-based competitions.
-  // Offline warm-up mode works without Supabase.
   await Supabase.initialize(
     url: SupabaseConfig.url,
     publishableKey: SupabaseConfig.anonKey,
@@ -40,7 +35,6 @@ class SumSprintApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ChallengeProvider()),
         ChangeNotifierProvider(create: (_) => ResultProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => CompetitionProvider()),
         ChangeNotifierProvider(create: (_) => MindTimerProvider()),
         ChangeNotifierProvider(create: (_) => PairHuntProvider()),
         ChangeNotifierProvider(create: (_) => TicTacToeProvider()),
@@ -59,9 +53,7 @@ class SumSprintApp extends StatelessWidget {
           useMaterial3: true,
           fontFamily: 'Roboto',
         ),
-        home: isTelegramAvailable
-            ? const TgSplashScreen()
-            : const SplashScreen(),
+        home: const SplashScreen(),
       ),
     );
   }

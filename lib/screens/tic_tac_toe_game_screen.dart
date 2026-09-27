@@ -15,9 +15,8 @@ const _tttPink = Color(0xFFEC4899);
 
 class TicTacToeGameScreen extends StatefulWidget {
   final ChallengeDefinition challenge;
-  final String? competitionId;
 
-  const TicTacToeGameScreen({super.key, required this.challenge, this.competitionId});
+  const TicTacToeGameScreen({super.key, required this.challenge});
 
   @override
   State<TicTacToeGameScreen> createState() => _TicTacToeGameScreenState();
@@ -544,18 +543,10 @@ class _TicTacToeGameScreenState extends State<TicTacToeGameScreen> {
     context.read<ResultProvider>().saveResult(result);
     if (!mounted) return;
 
-    if (widget.competitionId != null) {
-      Navigator.pop(context, {
-        'result': result,
-        'challenge': widget.challenge,
-        'competitionId': widget.competitionId,
-      });
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => ResultScreen(result: result, challenge: widget.challenge)),
-      );
-    }
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => ResultScreen(result: result, challenge: widget.challenge)),
+    );
   }
 }
 

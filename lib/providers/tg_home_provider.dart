@@ -17,7 +17,17 @@ class TgHomeProvider extends ChangeNotifier {
 
   int get totalScore => _profile?['total_score'] as int? ?? 0;
   int get coins => _profile?['coins'] as int? ?? 0;
-  String get nickname => _profile?['nickname'] as String? ?? 'Player';
+  String get nickname {
+    final nick = _profile?['nickname'] as String?;
+    if (nick != null && nick.isNotEmpty) return nick;
+    return 'Player';
+  }
+
+  void updateNickname(String nickname) {
+    if (_profile == null) return;
+    _profile = {..._profile!, 'nickname': nickname};
+    notifyListeners();
+  }
 
   Future<void> loadProfile() async {
     final uid = _client.auth.currentUser?.id;

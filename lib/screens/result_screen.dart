@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/result.dart';
@@ -8,28 +7,22 @@ import '../providers/challenge_provider.dart';
 import '../providers/mind_timer_provider.dart';
 import '../providers/pair_hunt_provider.dart';
 import '../providers/tic_tac_toe_provider.dart';
-import '../providers/competition_provider.dart';
-import '../providers/auth_provider.dart';
 import '../providers/tg_home_provider.dart';
-import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import 'game_screen.dart';
 import 'mind_timer_game_screen.dart';
 import 'pair_hunt_game_screen.dart';
 import 'tic_tac_toe_game_screen.dart';
 import 'home_screen.dart';
-import 'tg_home_screen.dart';
 
 class ResultScreen extends StatefulWidget {
   final Result result;
   final ChallengeDefinition challenge;
-  final String? competitionId;
 
   const ResultScreen({
     super.key,
     required this.result,
     required this.challenge,
-    this.competitionId,
   });
 
   @override
@@ -37,10 +30,6 @@ class ResultScreen extends StatefulWidget {
 }
 
 class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderStateMixin {
-  bool _submitting = false;
-  bool _submitted = false;
-  String? _submitError;
-
   late final AnimationController _enterCtrl;
   late final Animation<double> _enterAnim;
 
@@ -50,9 +39,6 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
     _enterCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
     _enterAnim = CurvedAnimation(parent: _enterCtrl, curve: Curves.easeOutCubic);
     _enterCtrl.forward();
-    if (widget.competitionId != null) {
-      _submitToCompetition();
-    }
   }
 
   @override
@@ -61,25 +47,8 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
     super.dispose();
   }
 
-  Future<void> _submitToCompetition() async {
-    setState(() { _submitting = true; _submitError = null; });
-    try {
-      final cp = context.read<CompetitionProvider>();
-      await cp.submitChallengeResult(widget.result).timeout(const Duration(seconds: 5));
-      if (mounted) setState(() { _submitting = false; _submitted = true; });
-    } catch (e) {
-      if (mounted) {
-        final l10n = AppLocalizations.of(context);
-        setState(() { _submitting = false; _submitError = l10n.scoreSavedLocally; });
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final isCompetition = widget.competitionId != null;
-
     return PopScope(
       canPop: false,
       child: Container(
@@ -101,116 +70,78 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                     const SizedBox(height: 4),
                     _GradeBadge(result: widget.result),
                     const SizedBox(height: 24),
-
-                    if (_submitting)
-                      _statusCard(Icons.cloud_upload_rounded, l10n.submittingScore, kAccentCyan),
-                    if (_submitted)
-                      _statusCard(Icons.cloud_done_rounded, l10n.scoreSubmitted, Colors.greenAccent),
-                    if (_submitError != null)
-                      Container(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.redAccent.withAlpha(15),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.redAccent.withAlpha(40)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.cloud_off_rounded, color: Colors.redAccent, size: 20),
-                            const SizedBox(width: 8),
-                            Expanded(child: Text(_submitError!, style: const TextStyle(color: Colors.redAccent, fontSize: 13))),
-                            TextButton(onPressed: _submitToCompetition,
-                                child: Text(l10n.retry, style: const TextStyle(color: kAccentCyan, fontSize: 12))),
-                          ],
-                        ),
-                      ),
-
                     _ScoreCard(result: widget.result),
                     const SizedBox(height: 20),
                     _StatsRow(result: widget.result, challenge: widget.challenge),
                     const SizedBox(height: 20),
-
-                    if (!isCompetition)
-                      FutureBuilder<int>(
-                        future: context.read<ResultProvider>().getHighScore(widget.challenge.id),
-                        builder: (ctx, snap) {
-                          final hs = snap.data ?? 0;
-                          if (widget.result.score >= hs && widget.result.score > 0) {
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 20),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(colors: [kAccentGold, Color(0xFFD97706)]),
-                                  borderRadius: BorderRadius.circular(20),
-                                  boxShadow: [BoxShadow(color: kAccentGold.withAlpha(40), blurRadius: 16)],
-                                ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text('🎉', style: TextStyle(fontSize: 20)),
-                                    SizedBox(width: 8),
-                                    Text('NEW PERSONAL BEST!',
-                                        style: TextStyle(color: kTextPrimary, fontWeight: FontWeight.w800, fontSize: 15, letterSpacing: 0.8)),
-                                  ],
-                                ),
+                    FutureBuilder<int>(
+                      future: context.read<ResultProvider>().getHighScore(widget.challenge.id),
+                      builder: (ctx, snap) {
+                        final hs = snap.data ?? 0;
+                        if (widget.result.score >= hs && widget.result.score > 0) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 20),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(colors: [kAccentGold, Color(0xFFD97706)]),
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [BoxShadow(color: kAccentGold.withAlpha(40), blurRadius: 16)],
                               ),
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        },
-                      ),
-
-                    if (!isCompetition) ...[
-                      _PrimaryButton(
-                        label: 'PLAY AGAIN',
-                        icon: Icons.replay_rounded,
-                        color: kAccentPurple,
-                        onPressed: () {
-                          if (widget.challenge.isTicTacToe) {
-                            context.read<TicTacToeProvider>().reset();
-                            Navigator.pushReplacement(context,
-                                MaterialPageRoute(builder: (_) => TicTacToeGameScreen(challenge: widget.challenge)));
-                          } else if (widget.challenge.isPairHunt) {
-                            context.read<PairHuntProvider>().reset();
-                            Navigator.pushReplacement(context,
-                                MaterialPageRoute(builder: (_) => PairHuntGameScreen(challenge: widget.challenge)));
-                          } else if (widget.challenge.isMindTimer) {
-                            context.read<MindTimerProvider>().reset();
-                            Navigator.pushReplacement(context,
-                                MaterialPageRoute(builder: (_) => MindTimerGameScreen(challenge: widget.challenge)));
-                          } else {
-                            context.read<ChallengeProvider>().reset();
-                            Navigator.pushReplacement(context,
-                                MaterialPageRoute(builder: (_) => GameScreen(challenge: widget.challenge)));
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text('🎉', style: TextStyle(fontSize: 20)),
+                                  SizedBox(width: 8),
+                                  Text('NEW PERSONAL BEST!',
+                                      style: TextStyle(color: kTextPrimary, fontWeight: FontWeight.w800, fontSize: 15, letterSpacing: 0.8)),
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                    _PrimaryButton(
+                      label: 'PLAY AGAIN',
+                      icon: Icons.replay_rounded,
+                      color: kAccentPurple,
+                      onPressed: () {
+                        if (widget.challenge.isTicTacToe) {
+                          context.read<TicTacToeProvider>().reset();
+                          Navigator.pushReplacement(context,
+                              MaterialPageRoute(builder: (_) => TicTacToeGameScreen(challenge: widget.challenge)));
+                        } else if (widget.challenge.isPairHunt) {
+                          context.read<PairHuntProvider>().reset();
+                          Navigator.pushReplacement(context,
+                              MaterialPageRoute(builder: (_) => PairHuntGameScreen(challenge: widget.challenge)));
+                        } else if (widget.challenge.isMindTimer) {
+                          context.read<MindTimerProvider>().reset();
+                          Navigator.pushReplacement(context,
+                              MaterialPageRoute(builder: (_) => MindTimerGameScreen(challenge: widget.challenge)));
+                        } else {
+                          context.read<ChallengeProvider>().reset();
+                          Navigator.pushReplacement(context,
+                              MaterialPageRoute(builder: (_) => GameScreen(challenge: widget.challenge)));
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
                     _SecondaryButton(
-                      label: isCompetition ? l10n.backToCompetition : 'GO TO HUB',
-                      icon: isCompetition ? Icons.arrow_back_rounded : Icons.home_rounded,
+                      label: 'GO TO HUB',
+                      icon: Icons.home_rounded,
                       onPressed: () {
                         context.read<ChallengeProvider>().reset();
                         context.read<MindTimerProvider>().reset();
                         context.read<PairHuntProvider>().reset();
                         context.read<TicTacToeProvider>().reset();
-                        if (isCompetition) {
-                          Navigator.pop(context);
-                        } else {
-                          final auth = context.read<AuthProvider>();
-                          if (auth.isLoggedIn) {
-                            context.read<TgHomeProvider>().loadProfile();
-                            Navigator.pushAndRemoveUntil(context,
-                                MaterialPageRoute(builder: (_) => const TgHomeScreen()), (_) => false);
-                          } else {
-                            Navigator.pushAndRemoveUntil(context,
-                                MaterialPageRoute(builder: (_) => const HomeScreen()), (_) => false);
-                          }
-                        }
+                        context.read<TgHomeProvider>().loadProfile();
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (_) => const HomeScreen()),
+                          (_) => false,
+                        );
                       },
                     ),
                     const SizedBox(height: 20),
@@ -220,26 +151,6 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _statusCard(IconData icon, String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: color.withAlpha(15),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withAlpha(30)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(width: 8),
-          Text(text, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
-        ],
       ),
     );
   }

@@ -17,9 +17,8 @@ const _mtSurface = Color(0xFF111418);
 
 class MindTimerGameScreen extends StatefulWidget {
   final ChallengeDefinition challenge;
-  final String? competitionId;
 
-  const MindTimerGameScreen({super.key, required this.challenge, this.competitionId});
+  const MindTimerGameScreen({super.key, required this.challenge});
 
   @override
   State<MindTimerGameScreen> createState() => _MindTimerGameScreenState();
@@ -449,15 +448,9 @@ class _MindTimerGameScreenState extends State<MindTimerGameScreen> with TickerPr
     context.read<ResultProvider>().saveResult(result);
     if (!mounted) return;
 
-    if (widget.competitionId != null) {
-      Navigator.pop(context, {
-        'result': result, 'challenge': widget.challenge, 'competitionId': widget.competitionId,
-      });
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => ResultScreen(result: result, challenge: widget.challenge)),
-      );
-    }
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => ResultScreen(result: result, challenge: widget.challenge)),
+    );
   }
 }

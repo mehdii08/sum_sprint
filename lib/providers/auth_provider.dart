@@ -26,13 +26,26 @@ class AuthProvider extends ChangeNotifier {
   String get userId => currentUser?.id ?? '';
   bool get isAdmin => _isAdmin;
 
-  String get telegramFirstName => tgFirstName;
-  String get telegramLastName => tgLastName;
-  String get telegramUsername => tgUsername;
-  String get telegramPhotoUrl => tgPhotoUrl;
+  String get telegramFirstName => isTelegramUser ? tgFirstName : '';
+  String get telegramLastName => isTelegramUser ? tgLastName : '';
+  String get telegramUsername => isTelegramUser ? tgUsername : '';
+  String get telegramPhotoUrl => isTelegramUser ? tgPhotoUrl : '';
 
-  String get displayName =>
-      telegramFirstName.isNotEmpty ? telegramFirstName : 'Player';
+  bool get isTelegramUser {
+    final email = userEmail;
+    return email.endsWith('@sumsprint.internal');
+  }
+
+  String get displayName {
+    final nick = _cachedProfile?['nickname'] as String?;
+    if (nick != null && nick.isNotEmpty) return nick;
+    if (telegramFirstName.isNotEmpty) return telegramFirstName;
+    final email = currentUser?.email;
+    if (email != null && email.isNotEmpty && !isTelegramUser) {
+      return email.split('@').first;
+    }
+    return 'Player';
+  }
 
   String get telegramFullName {
     if (telegramFirstName.isEmpty) return '';
@@ -213,6 +226,10 @@ class AuthProvider extends ChangeNotifier {
       final uid = currentUser?.id;
       if (uid == null) return;
       await _client.from('profiles').update({'nickname': nickname}).eq('id', uid);
+      if (_cachedProfile != null) {
+        _cachedProfile = {..._cachedProfile!, 'nickname': nickname};
+        notifyListeners();
+      }
     } catch (_) {}
   }
 

@@ -9,7 +9,6 @@ import 'result_repository.dart';
 /// from Supabase. Local caching is handled by [ResultProvider].
 ///
 /// Note: Offline warm-up mode still uses [LocalResultRepository].
-/// This repository is used for competition results submitted online.
 class SupabaseResultRepository implements ResultRepository {
   final SupabaseClient _client;
 
@@ -51,46 +50,6 @@ class SupabaseResultRepository implements ResultRepository {
       });
     } catch (e) {
       debugPrint('Failed to save result online: $e');
-    }
-  }
-
-  /// Save a result specifically for a competition.
-  Future<void> saveCompetitionResult({
-    required String competitionId,
-    required Result result,
-  }) async {
-    try {
-      final userId = _client.auth.currentUser?.id;
-      if (userId == null) return;
-
-      // Insert the challenge result
-      await _client.from('challenge_results').insert({
-        'competition_id': competitionId,
-        'user_id': userId,
-        'challenge_id': result.challengeId,
-        'score': result.score,
-        'correct_count': result.correctCount,
-        'total_time_ms': result.totalResponseTimeMs,
-        'created_at': DateTime.now().toUtc().toIso8601String(),
-      });
-
-      // Update participant's total score and completed count
-      await _client
-          .from('participants')
-          .select('total_score, completed_challenges')
-          .eq('competition_id', competitionId)
-          .eq('user_id', userId)
-          .single();
-
-      // Use RPC to atomically update participant score
-      await _client.rpc('update_participant_score', params: {
-        'p_competition_id': competitionId,
-        'p_user_id': userId,
-        'p_score': result.score,
-      });
-    } catch (e) {
-      debugPrint('Failed to save competition result: $e');
-      rethrow;
     }
   }
 
